@@ -1,4 +1,4 @@
-# I-skwel.ai
+# Blind Spot
 
 ## About the Project
 
