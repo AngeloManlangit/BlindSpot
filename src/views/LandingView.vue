@@ -54,11 +54,10 @@ const openDocumentation = () => {
     <div class="absolute top-6 right-6 z-50 flex flex-col gap-3">
       <button
         @click="toggleTheme"
-        class="theme-toggle p-3.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm flex items-center justify-center"
+        class="theme-toggle p-3.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm group relative flex items-center justify-center"
         :class="isDarkMode ? 'bg-white/5 border-white/10 text-yellow-400' : 'bg-white border-slate-200 text-slate-700'"
         type="button"
-        title="Toggle theme"
-      >
+        >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
@@ -87,7 +86,10 @@ const openDocumentation = () => {
             </g>
           </g>
         </svg>
-      </button>
+        <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-wider">
+        {{ isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode' }}
+      </span>
+    </button>
 
       <button 
         @click="openDocumentation"
@@ -158,7 +160,7 @@ const openDocumentation = () => {
           @click="handleSearch"
           class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-outfit font-bold text-base rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.97]"
         >
-          Check Electricity Risk
+          Check Risk
         </button>
       </div>
     </div>
