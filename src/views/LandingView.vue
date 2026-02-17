@@ -54,7 +54,7 @@ const openDocumentation = () => {
     <div class="absolute top-6 right-6 z-50 flex flex-col gap-3">
       <button
         @click="toggleTheme"
-        class="theme-toggle p-2.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm flex items-center justify-center"
+        class="theme-toggle p-3.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm flex items-center justify-center"
         :class="isDarkMode ? 'bg-white/5 border-white/10 text-yellow-400' : 'bg-white border-slate-200 text-slate-700'"
         type="button"
         title="Toggle theme"
@@ -91,7 +91,7 @@ const openDocumentation = () => {
 
       <button 
         @click="openDocumentation"
-        class="p-2.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm group relative"
+        class="p-3.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm group relative"
         :class="isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'"
       >
         <img 
@@ -108,7 +108,7 @@ const openDocumentation = () => {
 
     <div class="flex justify-center w-full mb-6 relative z-10">
       <img
-        src="../assets/Logo.png"
+        src="/blindspot-logo.svg"
         alt="BlindSpotPH Logo"
         class="w-[240px] md:w-[300px] lg:w-[380px] transition-all duration-100"
         :class="isDarkMode ? 'drop-shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'drop-shadow-md'"
@@ -126,7 +126,7 @@ const openDocumentation = () => {
         Stay Ahead
       </h1>
       <p 
-        class="font-judson text-base lg:text-xl mb-8 transition-colors duration-100"
+        class="font-judson text-base lg:text-lg mb-8 leading-snug transition-colors duration-100"
         :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'"
       >
         Keep critical power outages out of your blind spot. Stay prepared for potential outages and detect risks to your area's electricity before they cause disruption. 
@@ -186,7 +186,6 @@ const openDocumentation = () => {
   box-shadow: 0 20px 40px -15px rgba(30, 64, 175, 0.1);
 }
 
-/* Specific button hover tweak for the SVG */
 .theme-toggle:hover {
   transform: scale(1.05);
 }
