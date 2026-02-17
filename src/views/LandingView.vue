@@ -26,24 +26,27 @@ const openDocumentation = () => {
     :class="[isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900']"
     class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden transition-colors duration-700"
   >
-    
     <div class="absolute inset-0 z-0">
-      
-      <template v-if="!isDarkMode">
-        <div class="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-slate-100 -z-20"></div>
-        <div class="absolute top-[-5%] left-[-5%] w-[400px] h-[400px] bg-blue-400 rounded-full blur-3xl opacity-40 animate-pulse z-0"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-300 rounded-full blur-3xl opacity-30 animate-pulse z-0"></div>
-        <div class="absolute top-[30%] right-[20%] w-[250px] h-[250px] bg-blue-200 rounded-full blur-2xl opacity-30 z-0"></div>
-      </template>
+  <template v-if="!isDarkMode">
+    <div class="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-slate-100 -z-20"></div>
+    
+    <div class="absolute top-[-5%] left-[-5%] w-[400px] h-[400px] bg-blue-400 rounded-full blur-3xl opacity-60 animate-typhoon-1 z-0"></div>
+    
+    <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-300 rounded-full blur-3xl opacity-70 animate-typhoon-2 z-0"></div>
+    
+    <div class="absolute top-[30%] right-[20%] w-[250px] h-[250px] bg-blue-200 rounded-full blur-2xl opacity-70 animate-typhoon-3 z-0"></div>
+  </template>
 
-      <template v-else>
-        <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 -z-20"></div>
-        <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-600 rounded-full blur-[120px] opacity-10 animate-pulse z-0"></div>
-        <div class="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-slate-600 rounded-full blur-[140px] opacity-10 animate-pulse z-0"></div>
-        
-        <div class="absolute inset-0 opacity-[0.03] invert" style="background-image: radial-gradient(#fff 0.5px, transparent 0.5px); background-size: 40px 40px;"></div>
-      </template>
-    </div>
+  <template v-else>
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 -z-20"></div>
+    
+    <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-600 rounded-full blur-[120px] opacity-30 animate-typhoon-1 z-0"></div>
+    
+    <div class="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-slate-600 rounded-full blur-[140px] opacity-30 animate-typhoon-2 z-0"></div>
+    
+    <div class="absolute inset-0 opacity-[0.03] invert" style="background-image: radial-gradient(#fff 0.5px, transparent 0.5px); background-size: 40px 40px;"></div>
+  </template>
+</div>
 
     <div class="absolute top-6 right-6 z-50 flex flex-col gap-3">
       <button 
@@ -140,16 +143,56 @@ const openDocumentation = () => {
 </template>
 
 <style scoped>
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.03); }
+/* Swirling "Typhoon" effect */
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  33% {
+    /* Increased distance from 30px to 150px */
+    transform: translate(150px, -100px) rotate(120deg) scale(1.2);
+  }
+  66% {
+    /* Increased distance from -20px to -120px */
+    transform: translate(-120px, 150px) rotate(240deg) scale(0.8);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg) scale(1);
+  }
 }
 
-.animate-pulse {
-  animation: pulse 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Let's speed them up slightly so the movement is obvious */
+.animate-typhoon-1 {
+  animation: drift 15s linear infinite; /* from 25s to 15s */
 }
 
-/* Shadow for light mode*/
+.animate-typhoon-2 {
+  animation: drift 20s linear infinite reverse; /* from 35s to 20s */
+}
+
+.animate-typhoon-3 {
+  animation: drift 25s ease-in-out infinite; /* from 45s to 25s */
+}
+
+/* Pulsing opacity for a "stormy" feel */
+@keyframes atmospheric-pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.25; }
+}
+
+.animate-typhoon-1 {
+  animation: drift 25s linear infinite;
+}
+
+.animate-typhoon-2 {
+  animation: drift 35s linear infinite reverse;
+}
+
+.animate-typhoon-3 {
+  animation: drift 45s ease-in-out infinite;
+}
+
+/* Custom shadow for Light Mode card depth */
 .shadow-blue-100\/20 {
   box-shadow: 0 20px 40px -15px rgba(30, 64, 175, 0.1);
 }
