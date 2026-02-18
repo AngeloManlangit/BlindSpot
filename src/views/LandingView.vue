@@ -112,7 +112,7 @@ const openDocumentation = () => {
       <img
         :src="isDarkMode ? '/blindspot-logo-light.svg' : '/blindspot-logo.svg'"
         alt="BlindSpotPH Logo"
-        class="w-[180px] md:w-[240px] lg:w-[300px] transition-all duration-100"
+        class="w-[180px] md:w-[240px] lg:w-[260px] transition-all duration-100"
         :class="isDarkMode ? 'drop-shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'drop-shadow-md'"
       />
     </div>
