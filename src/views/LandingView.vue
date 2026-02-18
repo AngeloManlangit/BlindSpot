@@ -57,7 +57,7 @@ const openDocumentation = () => {
         class="theme-toggle p-3.5 rounded-xl border transition-all duration-100 backdrop-blur-md shadow-sm group relative flex items-center justify-center"
         :class="isDarkMode ? 'bg-white/5 border-white/10 text-yellow-400' : 'bg-white border-slate-200 text-slate-700'"
         type="button"
-        >
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
@@ -87,9 +87,9 @@ const openDocumentation = () => {
           </g>
         </svg>
         <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-wider">
-        {{ isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode' }}
-      </span>
-    </button>
+          {{ isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode' }}
+        </span>
+      </button>
 
       <button 
         @click="openDocumentation"
@@ -110,9 +110,9 @@ const openDocumentation = () => {
 
     <div class="flex justify-center w-full mb-6 relative z-10">
       <img
-        src="/blindspot-logo.svg"
+        :src="isDarkMode ? '/blindspot-logo-light.svg' : '/blindspot-logo.svg'"
         alt="BlindSpotPH Logo"
-        class="w-[240px] md:w-[300px] lg:w-[380px] transition-all duration-100"
+        class="w-[180px] md:w-[240px] lg:w-[300px] transition-all duration-100"
         :class="isDarkMode ? 'drop-shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'drop-shadow-md'"
       />
     </div>
