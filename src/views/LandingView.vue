@@ -110,7 +110,7 @@ const openDocumentation = () => {
 
     <div class="flex justify-center w-full mb-6 relative z-10">
       <img
-        :src="isDarkMode ? '/blindspot-logo-light.svg' : '/blindspot-logo.svg'"
+        :src="isDarkMode ? '/blindspot-logo-white.svg' : '/blindspot-logo-darkblue.svg'"
         alt="BlindSpotPH Logo"
         class="w-[180px] md:w-[240px] lg:w-[260px] transition-all duration-100"
         :class="isDarkMode ? 'drop-shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'drop-shadow-md'"
