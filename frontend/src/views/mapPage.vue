@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
+import mapHolder from '@/components/mapHolder.vue'
 
 // Syncing your isDark ref with the layout logic
 const isDark = ref(true)
@@ -27,7 +28,7 @@ import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
       <div class="gradient-overlay"></div>
 
       <div class="map-container">
-       
+       <mapHolder/>
       </div>
 
       <div class="typhoon-container">
@@ -169,10 +170,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.1;
-  z-index: -10;
+  opacity: 1;
+  z-index: 1;
+  pointer-events:  auto;
 }
-
+.map-container > * {
+  width: 100%;
+  height: 100%;
+}
 .ph-map {
   height: 200%;
   width: auto;
