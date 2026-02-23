@@ -54,7 +54,7 @@ import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
           class="theme-toggle__within"
           viewBox="0 0 32 32"
           fill="currentColor"
-        >
+        > 
           <clipPath id="theme-toggle__within__clip">
             <path d="M0 0h32v32h-32ZM6 16A1 1 0 0026 16 1 1 0 006 16" />
           </clipPath>

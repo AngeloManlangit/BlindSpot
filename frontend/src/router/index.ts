@@ -9,7 +9,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: LandingView
+      component: MapPage
     },
     {
       path: '/Map',
