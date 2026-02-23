@@ -1,11 +1,14 @@
-<script setup lang="ts"></script>
-
-<template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
-</template>
 
 <style scoped></style>
+
+<template>
+  <div class="flex">
+    <LandingView/>
+  </div>
+  
+</template>
+
+<script setup>
+import LandingView from './components/LandingView.vue';
+import Landing from './components/LandingView.vue'
+</script>
