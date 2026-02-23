@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import LandingView from '@/views/LandingView.vue'
+import MapPage from '@/views/mapPage.vue'
 
 // views
 const router = createRouter({
@@ -9,6 +10,10 @@ const router = createRouter({
     {
       path: '/',
       component: LandingView
+    },
+    {
+      path: '/Map',
+      component: MapPage
     }
   ],
 })
