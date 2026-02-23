@@ -1,14 +1,19 @@
 
-<style scoped></style>
+<script setup lang="ts"></script>
 
 <template>
-  <div class="flex">
-    <LandingView/>
+  <div id="bg">
+    <RouterView />
   </div>
   
 </template>
 
-<script setup>
-import LandingView from './components/LandingView.vue';
-import Landing from './components/LandingView.vue'
-</script>
+<style scoped>
+
+#bg {
+  width: 100%;
+  height: 100%;
+  background-color: red;
+}
+
+</style>
