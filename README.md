@@ -1,4 +1,6 @@
-# Blind Spot
+<p align="center">
+  <img width="625" height="395" alt="BlindSpot Logo" src="https://github.com/user-attachments/assets/42975061-837b-431b-bd26-c5c9fd4f95d5" />
+</p>
 
 ## About the Project
 
