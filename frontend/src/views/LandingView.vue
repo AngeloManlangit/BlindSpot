@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {Sun} from 'lucide-vue-next'
-const isDarkMode = ref(true)
-const location = ref('')
+import '@/assets/theme-toggle/within.css'
 
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value
-}
+// Syncing your isDark ref with the layout logic
+const isDark = ref(true)
+const location = ref('')
+const router = useRouter()
 
 const handleSearch = () => {
   if (!location.value) return
@@ -18,126 +17,179 @@ const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
 
-// images
 import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
-import LogoLight from "@/assets/svgs/blindspot-logo-dark-gray.svg"
-
-import ModeButton from "@/components/modeToggleButton.vue"
+import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 </script>
 
 <template>
-  <main :class="{ 'dark-mode': isDarkMode }">
-    <div class="bg-container">
-      <div class="bg-gradient"></div>
-      <div class="ph-map-overlay">
-        <img src="/ph.svg" alt="PH Map" class="ph-map" />
+  <main :class="['main-container', isDark ? 'dark' : 'light']">
+    <div class="bg-layer">
+      <div class="gradient-overlay"></div>
+
+      <div class="map-container">
+        <img 
+          src="/ph.svg" 
+          alt="PH Map"
+          :class="['ph-map', isDark ? 'dark-map' : 'light-map']"
+        />
       </div>
-      <div class="typhoon-tracks">
-        <div v-for="n in 3" :key="n" :class="['typhoon-blur', `delay-${(n-1)*15}`]"></div>
+
+      <div class="typhoon-container">
+        <div v-for="n in 3" :key="n"
+          :class="['typhoon-blob', `delay-${(n-1)*15}`]"
+        ></div>
       </div>
-      <div class="dots-pattern"></div>
+
+      <div v-if="isDark" class="grid-overlay"></div>
     </div>
 
-    <div class="actions-wrapper">
-      <button @click="toggleTheme" class="icon-btn theme-toggle" type="button">
-        <ModeButton />
+    <div class="top-actions">
+      <button
+        class="theme-toggle custom-toggle-btn"
+        :class="{ 'theme-toggle--toggled': isDark }"
+        type="button"
+        title="Toggle theme"
+        aria-label="Toggle theme"
+        @click="isDark = !isDark"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          class="theme-toggle__within"
+          viewBox="0 0 32 32"
+          fill="currentColor"
+        >
+          <clipPath id="theme-toggle__within__clip">
+            <path d="M0 0h32v32h-32ZM6 16A1 1 0 0026 16 1 1 0 006 16" />
+          </clipPath>
+          <g clip-path="url(#theme-toggle__within__clip)">
+            <path d="M30.7 21.3 27.1 16l3.7-5.3c.4-.5.1-1.3-.6-1.4l-6.3-1.1-1.1-6.3c-.1-.6-.8-.9-1.4-.6L16 5l-5.4-3.7c-.5-.4-1.3-.1-1.4.6l-1 6.3-6.4 1.1c-.6.1-.9.9-.6 1.3L4.9 16l-3.7 5.3c-.4.5-.1 1.3.6 1.4l6.3 1.1 1.1 6.3c.1.6.8.9 1.4.6l5.3-3.7 5.3 3.7c.5.4 1.3.1 1.4-.6l1.1-6.3 6.3-1.1c.8-.1 1.1-.8.7-1.4zM16 25.1c-5.1 0-9.1-4.1-9.1-9.1 0-5.1 4.1-9.1 9.1-9.1s9.1 4.1 9.1 9.1c0 5.1-4 9.1-9.1 9.1z" />
+          </g>
+          <path
+            class="theme-toggle__within__circle"
+            d="M16 7.7c-4.6 0-8.2 3.7-8.2 8.2s3.6 8.4 8.2 8.4 8.2-3.7 8.2-8.2-3.6-8.4-8.2-8.4zm0 14.4c-3.4 0-6.1-2.9-6.1-6.2s2.7-6.1 6.1-6.1c3.4 0 6.1 2.9 6.1 6.2s-2.7 6.1-6.1 6.1z"
+          />
+          <path
+            class="theme-toggle__within__inner"
+            d="M16 9.5c-3.6 0-6.4 2.9-6.4 6.4s2.8 6.5 6.4 6.5 6.4-2.9 6.4-6.4-2.8-6.5-6.4-6.5z"
+          />
+        </svg>
       </button>
 
       <button @click="openDocumentation" class="icon-btn">
-        <img src="/github-icon.svg" alt="GitHub" class="github-icon" />
+        <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         <span class="tooltip">Documentation</span>
       </button>
     </div>
 
-    <div class="logo-container">
-      <img :src="isDarkMode ? LogoDark : LogoLight" class="logo" alt="Logo" />
+    <div class="logo-wrapper">
+      <img
+        :src="isDark ? LogoDark : LogoWhite"
+        alt="BlindSpotPH Logo"
+        :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
+      />
     </div>
 
-    <section class="card">
+    <div class="card">
       <h1 class="title">Stay Ahead</h1>
       <p class="description">
-        Keep critical power outages out of your blind spot. Stay prepared for potential outages...
+        Keep critical power outages out of your blind spot. Stay prepared for potential outages and detect risks to your area's electricity before they cause disruption.
       </p>
 
-      <div class="search-form">
+      <div class="search-section">
         <div class="input-group">
-          <label class="input-label">Enter your location</label>
+          <label class="label">Enter your location</label>
           <input 
             v-model="location"
             type="text" 
             placeholder="e.g. Cebu City, Philippines"
+            class="search-input"
             @keyup.enter="handleSearch"
           />
         </div>
-        <button @click="handleSearch" class="submit-btn">Check Risk</button>
+
+        <button @click="handleSearch" class="submit-btn">
+          Check Risk
+        </button>
       </div>
-    </section>
+    </div>
   </main>
 </template>
 
-<style scoped>
-/* Variables and Theme Scoping */
-:root {
-  --bg-color: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --accent-blue: #2563eb;
-  --accent-hover: #1d4ed8;
-  --card-bg: rgba(255, 255, 255, 0.8);
-  --card-border: #ffffff;
-  --input-bg: #f8fafc;
-  --input-border: #f1f5f9;
-  --gradient-bg: linear-gradient(to bottom right, #ffffff, #eff6ff, #f1f5f9);
-  --map-filter: grayscale(1);
-  --typhoon-color: rgba(96, 165, 250, 0.4);
+<style>
+/* Reset to remove white borders and lock scroll */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #020617;
 }
+</style>
 
-.dark-mode {
-  --bg-color: #020617;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --accent-blue: #2563eb;
-  --accent-hover: #1d4ed8;
+<style scoped>
+/* Theme Variables */
+.main-container.dark {
+  --bg-main: #020617;
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
   --card-bg: rgba(15, 23, 42, 0.4);
   --card-border: rgba(255, 255, 255, 0.1);
   --input-bg: rgba(2, 6, 23, 0.5);
-  --input-border: rgba(255, 255, 255, 0.05);
-  --gradient-bg: linear-gradient(to bottom right, #020617, #172554, #0f172a);
-  --map-filter: invert(1) brightness(2);
-  --typhoon-color: rgba(37, 99, 235, 0.2);
+  --accent: #3b82f6;
+  --grad-start: #020617;
+  --grad-mid: #172554;
+  --grad-end: #0f172a;
+  --blob-opacity: 0.2;
+}
+
+.main-container.light {
+  --bg-main: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: #ffffff;
+  --input-bg: #f8fafc;
+  --accent: #2563eb;
+  --grad-start: #ffffff;
+  --grad-mid: #eff6ff;
+  --grad-end: #f1f5f9;
+  --blob-opacity: 0.4;
 }
 
 /* Layout */
-main {
+.main-container {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 1.5rem;
+  min-height: 100dvh;
+  width: 100vw;
+  padding: 24px;
   overflow: hidden;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  transition: background-color 0.1s ease;
+  transition: background-color 0.2s;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  box-sizing: border-box;
 }
 
-/* Background & Animations */
-.bg-container {
+.bg-layer {
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  position: fixed
 }
 
-.bg-gradient {
+.gradient-overlay {
   position: absolute;
   inset: 0;
-  background: var(--gradient-bg);
+  background: linear-gradient(to bottom right, var(--grad-start), var(--grad-mid), var(--grad-end));
   z-index: -20;
 }
 
-.ph-map-overlay {
+.map-container {
   position: absolute;
   inset: 0;
   display: flex;
@@ -151,20 +203,30 @@ main {
   height: 200%;
   width: auto;
   object-fit: contain;
+  transition: all 0.2s;
   transform: scale(1.25);
-  filter: var(--map-filter);
-  transition: filter 0.1s ease;
 }
 
-.dots-pattern {
+.dark-map { filter: invert(1) brightness(2); }
+.light-map { filter: grayscale(1); }
+
+/* Animated Blobs */
+.typhoon-container {
   position: absolute;
   inset: 0;
-  opacity: 0.03;
-  background-image: radial-gradient(#fff 0.5px, transparent 0.5px);
-  background-size: 40px 40px;
+  overflow: hidden;
 }
 
-.dark-mode .dots-pattern { filter: invert(1); }
+.typhoon-blob {
+  position: absolute;
+  width: 850px;
+  height: 500px;
+  filter: blur(150px);
+  background-color: var(--accent);
+  opacity: var(--blob-opacity);
+  border-radius: 40% 60% 70% 30% / 40% 40% 60% 60%;
+  animation: typhoon-flow 40s linear infinite;
+}
 
 @keyframes typhoon-flow {
   0% { transform: translate(100vw, 80vh) rotate(0deg) scale(1); opacity: 0; }
@@ -173,146 +235,152 @@ main {
   100% { transform: translate(-100vw, -80vh) rotate(180deg) scale(1.8); opacity: 0; }
 }
 
-.typhoon-blur {
-  position: absolute;
-  width: 850px;
-  height: 500px;
-  filter: blur(150px);
-  background-color: var(--typhoon-color);
-  animation: typhoon-flow 40s linear infinite;
-  border-radius: 40% 60% 70% 30% / 40% 40% 60% 60%;
-}
-
 .delay-15 { animation-delay: 15s; }
 .delay-30 { animation-delay: 30s; }
 
-/* Components */
-.actions-wrapper {
+.grid-overlay {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  inset: 0;
+  opacity: 0.03;
+  filter: invert(1);
+  background-image: radial-gradient(#fff 0.5px, transparent 0.5px);
+  background-size: 40px 40px;
+}
+
+/* UI Elements */
+.top-actions {
+  position: absolute;
+  top: 24px;
+  right: 24px;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 12px;
+}
+
+.custom-toggle-btn {
+  /* Applying layout styles to match documentation button */
+  padding: 8px; /* Slightly adjusted for your 4em svg */
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15; /* Yellow for sun */
+  transition: all 0.2s;
+}
+
+.light .custom-toggle-btn {
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+/* Scaling the 4em SVG to fit the UI better */
+.theme-toggle__within {
+  height: 32px;
+  width: 32px;
 }
 
 .icon-btn {
-  padding: 0.875rem;
-  border-radius: 0.75rem;
+  padding: 14px;
+  border-radius: 12px;
   border: 1px solid var(--card-border);
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
   cursor: pointer;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.github-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
+.icon-btn img { width: 24px; height: 24px; }
+.invert { filter: invert(1); }
 
-.dark-mode .github-icon { filter: invert(1); }
-
-.card {
-  z-index: 10;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(24px);
-  border-radius: 32px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 576px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  text-align: center;
-}
-
-.title {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-}
-
-.description {
-  font-family: 'Judson', serif;
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  margin-bottom: 2rem;
-}
-
-/* Form Styles */
-.search-form {
-  max-width: 340px;
-  margin: 0 auto;
-}
-
-.input-label {
-  display: block;
-  font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--accent-blue);
-  margin-bottom: 0.6rem;
-  text-align: left;
-}
-
-input {
-  width: 100%;
-  padding: 0.875rem 1.25rem;
-  border-radius: 0.75rem;
-  background: var(--input-bg);
-  border: 2px solid var(--input-border);
-  color: var(--text-primary);
-  font-family: 'Judson', serif;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-input:focus {
-  border-color: var(--accent-blue);
-}
-
-.submit-btn {
-  width: 100%;
-  margin-top: 1.25rem;
-  padding: 0.875rem;
-  background: var(--accent-blue);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.1s, background-color 0.2s;
-}
-
-.submit-btn:hover { background: var(--accent-hover); }
-.submit-btn:active { transform: scale(0.97); }
-
-.logo-container {
-  width: 20%;
-  height: 20%;
-  margin-bottom: 1.5rem;
-}
-
-/* Tooltips */
 .tooltip {
   position: absolute;
-  right: calc(100% + 12px);
+  right: 100%;
+  margin-right: 12px;
   top: 50%;
   transform: translateY(-50%);
+  padding: 4px 8px;
   background: #1e293b;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
   font-size: 10px;
-  text-transform: uppercase;
-  white-space: nowrap;
+  border-radius: 4px;
   opacity: 0;
-  pointer-events: none;
   transition: opacity 0.2s;
+  white-space: nowrap;
+  pointer-events: none;
+  text-transform: uppercase;
 }
 
 .icon-btn:hover .tooltip { opacity: 1; }
+.custom-toggle-btn:hover, .icon-btn:hover { transform: scale(1.05); }
+
+/* Main Card */
+.logo-wrapper { margin-bottom: 24px; z-index: 10; }
+.logo { width: 180px; transition: all 0.2s; }
+@media (min-width: 768px) { .logo { width: 240px; } }
+
+.logo-glow { filter: drop-shadow(0 0 20px rgba(37,99,235,0.2)); }
+.logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+
+.card {
+  backdrop-filter: blur(24px);
+  border-radius: 32px;
+  padding: 40px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  z-index: 10;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin: 0 0 8px 0; font-weight: 700; }
+.description { font-family: 'Judson', serif; color: var(--text-muted); line-height: 1.4; margin-bottom: 32px; font-size: 1.1rem; }
+
+.search-section { width: 100%; max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.label { display: block; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; text-align: left; color: var(--accent); margin-bottom: 10px; }
+
+.search-input {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: var(--input-bg);
+  color: inherit;
+  font-family: 'Judson', serif;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.dark .search-input { border-color: rgba(255,255,255,0.05); }
+.dark .search-input:focus { border-color: #3b82f6; }
+.light .search-input { border-color: #f1f5f9; }
+.light .search-input:focus { border-color: #2563eb; background: white; }
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+.submit-btn:active { transform: scale(0.97); }
 </style>
