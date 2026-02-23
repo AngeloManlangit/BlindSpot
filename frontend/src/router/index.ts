@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import LandingView from '@/components/LandingView.vue'
+import LandingView from '@/views/LandingView.vue'
 
 // views
 const router = createRouter({
