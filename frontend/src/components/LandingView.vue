@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import {Sun} from 'lucide-vue-next'
 const isDarkMode = ref(true)
 const location = ref('')
-const router = useRouter()
 
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
@@ -18,6 +17,10 @@ const handleSearch = () => {
 const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
+
+// images
+import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
+import LogoLight from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 </script>
 
 <template>
@@ -48,7 +51,7 @@ const openDocumentation = () => {
     </div>
 
     <div class="logo-container">
-      <img :src="isDarkMode ? '/blindspot-logo-light.svg' : '/blindspot-logo.svg'" class="logo" alt="Logo" />
+      <img :src="isDarkMode ? LogoDark : LogoLight" class="logo" alt="Logo" />
     </div>
 
     <section class="card">
@@ -287,6 +290,12 @@ input:focus {
 
 .submit-btn:hover { background: var(--accent-hover); }
 .submit-btn:active { transform: scale(0.97); }
+
+.logo-container {
+  width: 20%;
+  height: 20%;
+  margin-bottom: 1.5rem;
+}
 
 /* Tooltips */
 .tooltip {
