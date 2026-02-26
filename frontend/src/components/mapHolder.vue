@@ -4,12 +4,10 @@ import { onMounted, ref } from 'vue';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const mapContainer = ref<HTMLElement | null>(null);
-onMounted (() => {
-    //imports the access token from the .env file
-   
-
-    mapboxgl.accessToken = 'pk.eyJ1IjoiY3VjdXJseXoiLCJhIjoiY21hMGx2ZjQ0MjZqNjJpcG1xNnhuZzN5eiJ9.9YAJFV1B_U8tY6bNL_aj9Q';
-
+  
+onMounted (() => {   
+    const token = import.meta.env.VITE_MAPBOX_TOKEN;
+    mapboxgl.accessToken = token;
     if (mapContainer.value) {
     const map = new mapboxgl.Map({
       container: mapContainer.value, 
@@ -27,8 +25,8 @@ onMounted (() => {
 <style scoped>
 .map-inner-container {
   width: 100%;
-  height: 100%; /* Important: Tells the map to fill its parent div */
-  min-height: 100vh; /* Ensures visibility during the hackathon */
+  height: 100%; 
+  min-height: 100vh; 
 }
 </style>
 
