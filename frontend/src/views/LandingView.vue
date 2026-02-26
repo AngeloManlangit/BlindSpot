@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
 
-// Syncing your isDark ref with the layout logic
 const isDark = ref(true)
 const location = ref('')
 const router = useRouter()
@@ -117,7 +116,7 @@ import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 </template>
 
 <style>
-/* Reset to remove white borders and lock scroll */
+
 html, body {
   margin: 0;
   padding: 0;
@@ -129,7 +128,6 @@ html, body {
 </style>
 
 <style scoped>
-/* Theme Variables */
 .main-container.dark {
   --bg-main: #020617;
   --text-main: #ffffff;
@@ -158,7 +156,6 @@ html, body {
   --blob-opacity: 0.4;
 }
 
-/* Layout */
 .main-container {
   position: relative;
   display: flex;
@@ -210,7 +207,6 @@ html, body {
 .dark-map { filter: invert(1) brightness(2); }
 .light-map { filter: grayscale(1); }
 
-/* Animated Blobs */
 .typhoon-container {
   position: absolute;
   inset: 0;
@@ -247,7 +243,6 @@ html, body {
   background-size: 40px 40px;
 }
 
-/* UI Elements */
 .top-actions {
   position: absolute;
   top: 24px;
@@ -260,8 +255,7 @@ html, body {
 }
 
 .custom-toggle-btn {
-  /* Applying layout styles to match documentation button */
-  padding: 8px; /* Slightly adjusted for your 4em svg */
+  padding: 8px;
   border-radius: 12px;
   border: 1px solid var(--card-border);
   background: rgba(255, 255, 255, 0.05);
@@ -270,7 +264,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #facc15; /* Yellow for sun */
+  color: #facc15; 
   transition: all 0.2s;
 }
 
@@ -279,7 +273,6 @@ html, body {
   color: #334155;
 }
 
-/* Scaling the 4em SVG to fit the UI better */
 .theme-toggle__within {
   height: 32px;
   width: 32px;
@@ -322,7 +315,6 @@ html, body {
 .icon-btn:hover .tooltip { opacity: 1; }
 .custom-toggle-btn:hover, .icon-btn:hover { transform: scale(1.05); }
 
-/* Main Card */
 .logo-wrapper { margin-bottom: 24px; z-index: 10; }
 .logo { width: 180px; transition: all 0.2s; }
 @media (min-width: 768px) { .logo { width: 240px; } }
