@@ -21,6 +21,8 @@ import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
 import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
+
+import mapHolder from '@/components/mapHolder.vue'
 </script>
 
 <template>
@@ -29,7 +31,7 @@ import ThemeToggleButton from '@/components/themeToggleButton.vue'
       <div class="gradient-overlay"></div>
 
       <div class="map-container">
-       
+        <mapHolder/>
       </div>
 
       <div class="typhoon-container">
@@ -57,8 +59,6 @@ import ThemeToggleButton from '@/components/themeToggleButton.vue'
         :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
       />
     </div>
-
-   
   </main>
 </template>
 
@@ -129,8 +129,13 @@ import ThemeToggleButton from '@/components/themeToggleButton.vue'
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.1;
-  z-index: -10;
+  opacity: 1;
+  z-index: 1;
+  pointer-events:  auto;
+}
+.map-container > * {
+  width: 100%;
+  height: 100%;
 }
 
 .ph-map {
