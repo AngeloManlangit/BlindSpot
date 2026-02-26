@@ -13,6 +13,7 @@ const router = createRouter({
     },
     {
       path: '/Map',
+      name: 'Map',
       component: MapPage
     }
   ],

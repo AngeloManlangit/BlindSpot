@@ -17,8 +17,8 @@ const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
 
-import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
-import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
+import LogoDark from "@/assets/svgs/cyclone_dark.svg"
+import LogoWhite from "@/assets/svgs/cyclone_light.svg"
 
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 
@@ -59,6 +59,9 @@ import mapHolder from '@/components/mapHolder.vue'
         :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
       />
     </div>
+
+    <div class="try"> hello world
+    </div>
   </main>
 </template>
 
@@ -91,7 +94,22 @@ import mapHolder from '@/components/mapHolder.vue'
   --grad-end: #f1f5f9;
   --blob-opacity: 0.4;
 }
-
+.try {
+  position: absolute;
+  top: 2%;
+  left: 79%;
+  transform: translateX(-50%);
+  font-family: 'Judson', serif;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  z-index: 20;
+  background-color: blue;
+  width: 39%;
+  
+  border-radius: 30px;
+  bottom: 12px;
+  
+}
 /* Layout */
 .main-container {
   position: relative;
@@ -189,8 +207,8 @@ import mapHolder from '@/components/mapHolder.vue'
 /* UI Elements */
 .top-actions {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  top: 15%;
+  left: 24px;
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -245,7 +263,7 @@ import mapHolder from '@/components/mapHolder.vue'
   justify-content: center;
 }
 .logo { width: 130px; transition: all 0.2s; }
-@media (min-width: 768px) { .logo { width: 100px; } }
+@media (min-width: 768px) { .logo { width: 70px; } }
 
 .logo-glow { filter: drop-shadow(0 0 20px rgba(37,99,235,0.2)); }
 .logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }

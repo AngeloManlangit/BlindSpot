@@ -10,6 +10,8 @@ const router = useRouter()
 const handleSearch = () => {
   if (!location.value) return
   console.log("Checking risk for:", location.value)
+
+  router.push({ name: 'Map', query: { location: location.value } })
 }
 
 const openDocumentation = () => {
