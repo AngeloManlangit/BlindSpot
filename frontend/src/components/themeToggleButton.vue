@@ -1,18 +1,16 @@
 <template>
   <button
-    class="theme-toggle"
+    class="theme-toggle custom-toggle-btn"
     :class="{ 'theme-toggle--toggled': isDark }"
     type="button"
     title="Toggle theme"
     aria-label="Toggle theme"
-    @click="isDark = !isDark"
+    @click="emit('toggle')"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       class="theme-toggle__within"
-      height="4em"
-      width="4em"
       viewBox="0 0 32 32"
       fill="currentColor"
     >
@@ -34,9 +32,36 @@
   </button>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import '@/assets/theme-toggle/within.css';
+<script setup lang="ts">
+defineProps<{
+  isDark: boolean
+}>()
 
-const isDark = ref(false);
+const emit = defineEmits(['toggle'])
 </script>
+
+<style setup>
+.custom-toggle-btn {
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15; 
+  transition: all 0.2s;
+}
+
+.light .custom-toggle-btn {
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.theme-toggle__within {
+  height: 32px;
+  width: 32px;
+}
+</style>
