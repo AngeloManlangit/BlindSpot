@@ -4,6 +4,8 @@ import { onMounted, ref } from 'vue';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const mapContainer = ref<HTMLElement | null>(null);
+
+var mapStyle = 'mapbox://styles/mapbox/navigation-day-v1'
   
 onMounted (() => {   
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -11,7 +13,7 @@ onMounted (() => {
     if (mapContainer.value) {
     const map = new mapboxgl.Map({
       container: mapContainer.value, 
-      style: 'mapbox://styles/mapbox/streets-v12', 
+      style: mapStyle,
       center: [123.8854, 10.3157], 
       zoom: 12
     });
