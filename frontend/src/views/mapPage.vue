@@ -1,51 +1,120 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
+import { generateRiskReport } from '../../../backend/services/pdfReport';
+import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
-// Syncing your isDark ref with the layout logic
+import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
+import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
+import ThemeToggleButton from '@/components/themeToggleButton.vue'
+import mapHolder from '@/components/mapHolder.vue'
+
+import PdfHeader from '@/components/pdf/PdfHeader.vue'
+import PdfLocation from '@/components/pdf/PdfLocation.vue'
+import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
+import PdfHazards from '@/components/pdf/PdfHazards.vue'
+import PdfThreeDayForecast from '@/components/pdf/PdfThreeDayForecast.vue'
+import PdfCurrentWeather from '@/components/pdf/PdfCurrentWeather.vue'
+import PdfWeekForecast from '@/components/pdf/PdfWeekForecast.vue'
+import PdfCellTowers from '@/components/pdf/PdfCellTowers.vue'
+import PdfBlindSpots from '@/components/pdf/PdfBlindSpots.vue'
+import PdfRecommendations from '@/components/pdf/PdfRecommendations.vue'
+import PdfMethodology from '@/components/pdf/PdfMethodology.vue'
+import PdfDataSources from '@/components/pdf/PdfDataSources.vue'
+import PdfFooter from '@/components/pdf/PdfFooter.vue'
+
+// State
+
 const isDark = ref(true)
-const location = ref('')
 const router = useRouter()
+const pdfLogoDataUrl = ref('')
+const pdfLogoSvg = ref('')      
+const reportTemplate = ref<HTMLElement | null>(null)
 
-const handleSearch = () => {
-  if (!location.value) return
-  console.log("Checking risk for:", location.value)
+// Reactive report data,,, populate from API / map click 
+const reportData = ref<RiskReport>({
+  location: '',
+  city: '',
+  region: '',
+  coordinates: '',
+  elevation: '',
+  population: '',
+  generatedAt: '',
+  confidence: 0,
+  overallRisk: 0,
+  overallLevel: '',
+  hazard: 0,
+  exposure: 0,
+  vulnerability: 0,
+  capacity: 0,
+  hazards: [],
+  threeDayForecast: [],
+  currentWeather: {
+    temperature: '',
+    description: '',
+    humidity: '',
+    windSpeed: '',
+    visibility: '',
+  },
+  weekForecast: [],
+  cellTowers: [],
+  blindSpots: [],
+  recommendations: [],
+  methodology: '',
+  dataSources: [],
+})
+
+import { hazardLevelColor } from '@/utils/hazardLevelColor'
+
+const formatNow = (): string => {
+  return new Date().toLocaleString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  })
 }
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/blindspot-logo-white.svg')
+    const svg = await res.text()
+    pdfLogoSvg.value = svg
+
+    const blob = new Blob([svg], { type: 'image/svg+xml' })
+    pdfLogoDataUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    console.warn('Could not load PDF logo:', e)
+  }
+})
 
 const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
 
-import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
-import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
+const downloadPDF = async () => {
+  if (!reportTemplate.value) return
+  reportData.value.generatedAt = formatNow()
 
-import ThemeToggleButton from '@/components/themeToggleButton.vue'
-
-import mapHolder from '@/components/mapHolder.vue'
+  await generateRiskReport(
+    reportTemplate.value,
+    `BlindSpot_Risk_Report_${reportData.value.location.replace(/\s+/g, '_')}`
+  )
+}
 </script>
 
 <template>
   <main :class="['main-container', isDark ? 'dark' : 'light']">
     <div class="bg-layer">
       <div class="gradient-overlay"></div>
-
-      <div class="map-container">
-        <mapHolder/>
-      </div>
-
+      <div class="map-container"><mapHolder/></div>
       <div class="typhoon-container">
-        <div v-for="n in 3" :key="n"
-          :class="['typhoon-blob', `delay-${(n-1)*15}`]"
-        ></div>
+        <div v-for="n in 3" :key="n" :class="['typhoon-blob', `delay-${(n-1)*15}`]"></div>
       </div>
-
       <div v-if="isDark" class="grid-overlay"></div>
     </div>
 
     <div class="top-actions">
       <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
-
       <button @click="openDocumentation" class="icon-btn">
         <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         <span class="tooltip">Documentation</span>
@@ -53,17 +122,50 @@ import mapHolder from '@/components/mapHolder.vue'
     </div>
 
     <div class="logo-wrapper">
-      <img
-        :src="isDark ? LogoDark : LogoWhite"
-        alt="BlindSpotPH Logo"
-        :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
-      />
+      <img :src="isDark ? LogoDark : LogoWhite" alt="BlindSpotPH Logo" :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']" />
+    </div>
+
+    <div class="central-card-wrapper">
+      <div class="card">
+        <button @click="downloadPDF" class="submit-btn">
+          Generate Risk Report
+        </button>
+      </div>
+    </div>
+
+    <!-- PDF Template -->
+    <div style="position: absolute; left: -9999px; top: 0;">
+      <div ref="reportTemplate" style="background: white; color: #0f172a; width: 800px; padding: 50px; font-family: 'Helvetica', sans-serif;">
+        <PdfHeader :logo-svg="pdfLogoSvg" :logo-url="pdfLogoDataUrl" :data="reportData" />
+        <PdfLocation :data="reportData" />
+        <div
+          :style="`background: ${hazardLevelColor(reportData.overallLevel)}; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px;`"
+        >
+          <h3 style="margin: 0;">
+            OVERALL RISK: {{ reportData.overallRisk }}/100 — {{ reportData.overallLevel }}
+          </h3>
+          <p style="margin-top: 5px; font-size: 11px;">
+            Risk = (Hazard × Exposure × Vulnerability) / Capacity
+          </p>
+        </div>
+        <PdfRiskFactors :data="reportData" />
+        <PdfHazards :data="reportData" />
+        <PdfThreeDayForecast :data="reportData" />
+        <PdfCurrentWeather :data="reportData" />
+        <PdfWeekForecast :data="reportData" />
+        <PdfCellTowers :data="reportData" />
+        <PdfBlindSpots :data="reportData" />
+        <PdfRecommendations :data="reportData" />
+        <PdfMethodology :data="reportData" />
+        <PdfDataSources :data="reportData" />
+        <PdfFooter />
+      </div>
     </div>
   </main>
 </template>
 
 <style scoped>
-/* Theme Variables */
+/* --- THEME VARIABLES --- */
 .main-container.dark {
   --bg-main: #020617;
   --text-main: #ffffff;
@@ -92,7 +194,7 @@ import mapHolder from '@/components/mapHolder.vue'
   --blob-opacity: 0.4;
 }
 
-/* Layout */
+/* --- CORE LAYOUT --- */
 .main-container {
   position: relative;
   display: flex;
@@ -131,62 +233,15 @@ import mapHolder from '@/components/mapHolder.vue'
   justify-content: center;
   opacity: 1;
   z-index: 1;
-  pointer-events:  auto;
+  pointer-events: auto;
 }
+
 .map-container > * {
   width: 100%;
   height: 100%;
 }
 
-.ph-map {
-  height: 200%;
-  width: auto;
-  object-fit: contain;
-  transition: all 0.2s;
-  transform: scale(1.25);
-}
-
-.dark-map { filter: invert(1) brightness(2); }
-.light-map { filter: grayscale(1); }
-
-/* Animated Blobs */
-.typhoon-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.typhoon-blob {
-  position: absolute;
-  width: 850px;
-  height: 500px;
-  filter: blur(150px);
-  background-color: var(--accent);
-  opacity: var(--blob-opacity);
-  border-radius: 40% 60% 70% 30% / 40% 40% 60% 60%;
-  animation: typhoon-flow 40s linear infinite;
-}
-
-@keyframes typhoon-flow {
-  0% { transform: translate(100vw, 80vh) rotate(0deg) scale(1); opacity: 0; }
-  15% { opacity: 0.5; }
-  85% { opacity: 0.5; }
-  100% { transform: translate(-100vw, -80vh) rotate(180deg) scale(1.8); opacity: 0; }
-}
-
-.delay-15 { animation-delay: 15s; }
-.delay-30 { animation-delay: 30s; }
-
-.grid-overlay {
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  filter: invert(1);
-  background-image: radial-gradient(#fff 0.5px, transparent 0.5px);
-  background-size: 40px 40px;
-}
-
-/* UI Elements */
+/* --- TOP ACTION BUTTONS --- */
 .top-actions {
   position: absolute;
   top: 24px;
@@ -209,6 +264,7 @@ import mapHolder from '@/components/mapHolder.vue'
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s;
 }
 
 .icon-btn img { width: 24px; height: 24px; }
@@ -233,16 +289,14 @@ import mapHolder from '@/components/mapHolder.vue'
 }
 
 .icon-btn:hover .tooltip { opacity: 1; }
-.custom-toggle-btn:hover, .icon-btn:hover { transform: scale(1.05); }
+.icon-btn:hover { transform: scale(1.05); }
 
-/* Main Card */
-.logo-wrapper { 
+/* --- LOGO --- */
+.logo-wrapper {
   position: absolute;
   top: 24px;
-  left: 24px;  
-  z-index: 60;  
-  display: flex;
-  justify-content: center;
+  left: 24px;
+  z-index: 60;
 }
 .logo { width: 130px; transition: all 0.2s; }
 @media (min-width: 768px) { .logo { width: 100px; } }
@@ -250,48 +304,46 @@ import mapHolder from '@/components/mapHolder.vue'
 .logo-glow { filter: drop-shadow(0 0 20px rgba(37,99,235,0.2)); }
 .logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
 
+/* --- CENTRAL CARD & BUTTON --- */
+.central-card-wrapper {
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
 .card {
   backdrop-filter: blur(24px);
   border-radius: 32px;
   padding: 40px;
   width: 90%;
   max-width: 500px;
-
   text-align: center;
-  z-index: 10;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin: 0 0 8px 0; font-weight: 700; }
-.description { font-family: 'Judson', serif; color: var(--text-muted); line-height: 1.4; margin-bottom: 32px; font-size: 1.1rem; }
-
-.search-section { width: 100%; max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-.label { display: block; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; text-align: left; color: var(--accent); margin-bottom: 10px; }
-
-.search-input {
-  width: 100%;
-  padding: 14px 20px;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  background: var(--input-bg);
-  color: inherit;
-  font-family: 'Judson', serif;
-  outline: none;
-  transition: all 0.2s;
-  box-sizing: border-box;
+.title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  margin: 0 0 8px 0;
+  font-weight: 700;
 }
 
-.dark .search-input { border-color: rgba(255,255,255,0.05); }
-.dark .search-input:focus { border-color: #3b82f6; }
-.light .search-input { border-color: #f1f5f9; }
-.light .search-input:focus { border-color: #2563eb; background: white; }
+.description {
+  font-family: 'Judson', serif;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 32px;
+  font-size: 1.1rem;
+}
 
 .submit-btn {
   width: 100%;
-  padding: 14px;
-  background: #2563eb;
+  padding: 16px;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 12px;
@@ -302,6 +354,11 @@ import mapHolder from '@/components/mapHolder.vue'
   transition: all 0.2s;
 }
 
-.submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
-.submit-btn:active { transform: scale(0.97); }
+.submit-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+}
+
+.submit-btn:active { transform: scale(0.98); }
 </style>
