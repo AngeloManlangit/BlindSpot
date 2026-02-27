@@ -12,16 +12,21 @@ const handleSearch = () => {
   if (!location.value) return
   console.log("Checking risk for:", location.value)
 }
-
+const home = () => {
+  router.push({ name: 'Landing' })
+}
 const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
-
+const hover = ref(false)
+const panelopen = ref(false)
 import LogoDark from "@/assets/svgs/cyclone_dark.svg"
 import LogoWhite from "@/assets/svgs/cyclone_light.svg"
 
-import ThemeToggleButton from '@/components/themeToggleButton.vue'
+import LogoDS from "@/assets/svgs/spin_dark.gif"
+import LogoWS from "@/assets/svgs/spin_white.gif"
 
+import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
 </script>
 
@@ -34,33 +39,34 @@ import mapHolder from '@/components/mapHolder.vue'
         <mapHolder/>
       </div>
 
-      <div class="typhoon-container">
-        <div v-for="n in 3" :key="n"
-          :class="['typhoon-blob', `delay-${(n-1)*15}`]"
-        ></div>
-      </div>
-
       <div v-if="isDark" class="grid-overlay"></div>
     </div>
+    <div class="logo-container">
+  <div class="logo-wrapper">
+    <img
+      :src="hover ? (isDark ? LogoDS : LogoWS) : (isDark ? LogoDark : LogoWhite)" 
+      alt="BlindSpotPH Logo"
+      @mouseenter="hover = true"
+      @mouseleave="hover = false"
+      @click="home"
+      :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
+    />
+  </div>
 
-    <div class="top-actions">
-      <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
+  <div class="top-actions">
+    <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
 
-      <button @click="openDocumentation" class="icon-btn">
-        <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
-        <span class="tooltip">Documentation</span>
-      </button>
-    </div>
-
-    <div class="logo-wrapper">
-      <img
-        :src="isDark ? LogoDark : LogoWhite"
-        alt="BlindSpotPH Logo"
-        :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
-      />
-    </div>
-
-    <div class="try"> hello world
+    <button @click="openDocumentation" class="icon-btn">
+      <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
+      
+    </button>
+  </div>
+</div>
+    <div :class="['right-panel', panelopen ? 'open' : 'closed']"> 
+      <button>  Download Report </button> 
+      <button class="toggle-btn" :style="{ transform: panelopen ? 'translateY(-50%)' : 'translateY(-50%) rotate(180deg)' }" @click="panelopen = !panelopen">
+  ❮
+</button>
     </div>
   </main>
 </template>
@@ -94,22 +100,45 @@ import mapHolder from '@/components/mapHolder.vue'
   --grad-end: #f1f5f9;
   --blob-opacity: 0.4;
 }
-.try {
+
+
+.right-panel {
   position: absolute;
-  top: 2%;
-  left: 79%;
-  transform: translateX(-50%);
-  font-family: 'Judson', serif;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  z-index: 20;
-  background-color: blue;
-  width: 39%;
-  
-  border-radius: 30px;
-  bottom: 12px;
-  
+  top: 0;
+  right: 0;
+
+  width: 400px;
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    #13233a,
+    #0f1b2d
+  );
+
+  backdrop-filter: blur(20px);
+
+  border-left: 1px solid rgba(255,255,255,0.05);
+
+  padding: 30px;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+
+  z-index: 100;
+  transition: transform 0.4s ease;
 }
+
+.right-panel.closed { 
+  transform: translateX(calc(100% - 40px)); 
+}
+
+.right-panel.open { 
+  transform: translateX(0); 
+}
+
 /* Layout */
 .main-container {
   position: relative;
@@ -140,6 +169,41 @@ import mapHolder from '@/components/mapHolder.vue'
   background: linear-gradient(to bottom right, var(--grad-start), var(--grad-mid), var(--grad-end));
   z-index: -20;
 }
+.logo-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 60;
+}
+
+.top-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+
+  opacity: 0;
+  transform: translateY(-20px);
+  visibility: hidden;
+  pointer-events: none;
+
+  transition: 
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    visibility 0.35s ease;
+}
+.top-actions .custom-toggle-btn {
+  margin-top:100px;
+}
+.logo-container:hover .top-actions {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+}
 
 .map-container {
   position: absolute;
@@ -167,30 +231,6 @@ import mapHolder from '@/components/mapHolder.vue'
 .dark-map { filter: invert(1) brightness(2); }
 .light-map { filter: grayscale(1); }
 
-/* Animated Blobs */
-.typhoon-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.typhoon-blob {
-  position: absolute;
-  width: 850px;
-  height: 500px;
-  filter: blur(150px);
-  background-color: var(--accent);
-  opacity: var(--blob-opacity);
-  border-radius: 40% 60% 70% 30% / 40% 40% 60% 60%;
-  animation: typhoon-flow 40s linear infinite;
-}
-
-@keyframes typhoon-flow {
-  0% { transform: translate(100vw, 80vh) rotate(0deg) scale(1); opacity: 0; }
-  15% { opacity: 0.5; }
-  85% { opacity: 0.5; }
-  100% { transform: translate(-100vw, -80vh) rotate(180deg) scale(1.8); opacity: 0; }
-}
 
 .delay-15 { animation-delay: 15s; }
 .delay-30 { animation-delay: 30s; }
@@ -205,16 +245,6 @@ import mapHolder from '@/components/mapHolder.vue'
 }
 
 /* UI Elements */
-.top-actions {
-  position: absolute;
-  top: 15%;
-  left: 24px;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
 
 .icon-btn {
   padding: 14px;
@@ -232,37 +262,26 @@ import mapHolder from '@/components/mapHolder.vue'
 .icon-btn img { width: 24px; height: 24px; }
 .invert { filter: invert(1); }
 
-.tooltip {
-  position: absolute;
-  right: 100%;
-  margin-right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 8px;
-  background: #1e293b;
-  color: white;
-  font-size: 10px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
-  white-space: nowrap;
-  pointer-events: none;
-  text-transform: uppercase;
-}
 
-.icon-btn:hover .tooltip { opacity: 1; }
+.icon-btn:hover { opacity: 1; }
 .custom-toggle-btn:hover, .icon-btn:hover { transform: scale(1.05); }
 
 /* Main Card */
 .logo-wrapper { 
   position: absolute;
-  top: 24px;
-  left: 24px;  
+  top: 12px;
+  left: 10px;  
   z-index: 60;  
   display: flex;
   justify-content: center;
 }
-.logo { width: 130px; transition: all 0.2s; }
+.logo { 
+  width: 90px; 
+  height: 90px;
+  object-fit: contain;
+  transition: transform 0.2s ease; 
+}
+
 @media (min-width: 768px) { .logo { width: 70px; } }
 
 .logo-glow { filter: drop-shadow(0 0 20px rgba(37,99,235,0.2)); }
@@ -322,4 +341,33 @@ import mapHolder from '@/components/mapHolder.vue'
 
 .submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
 .submit-btn:active { transform: scale(0.97); }
+.toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: #1e293b;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: #2563eb;
+  transform: translateY(-50%) scale(1.05);
+}
+
+
+.toggle-btn.rotated {
+  transform: translateY(-50%) rotate(180deg);
+}
 </style>

@@ -9,6 +9,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'Landing',
       component: LandingView
     },
     {
