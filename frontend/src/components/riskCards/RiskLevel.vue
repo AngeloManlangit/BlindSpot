@@ -4,7 +4,8 @@ import type { RiskReport } from '@/type/types.ts';
 import { hazardLevelColor } from '@/utils/hazardLevelColor';
 
 const props = defineProps<{
-    report: RiskReport
+    report: RiskReport,
+    isDark: boolean
 }>();
 
 // for the gauge
@@ -27,10 +28,12 @@ const getBarColor = (value: number, invert?: boolean) => {
     
     return value > 60 ? '#EF4444' : value > 30 ? '#F59E0B' : '#10B981';
 };
+
+const mainBarColor = (props.isDark) ? '#1e293b' : '#687b98';
 </script>
 
 <template>
-    <section class="risk-card">
+    <section :class="['risk-card', isDark ? 'dark' : 'light']">
         <h2 class="title">Risk Level</h2>
 
         <div class="gauge">
@@ -39,7 +42,7 @@ const getBarColor = (value: number, invert?: boolean) => {
                 <path
                     d="M 20 100 A 80 80 0 0 1 180 100"
                     fill="none"
-                    stroke="#1e293b"
+                    :stroke="mainBarColor"
                     stroke-width="12"
                     stroke-linecap="round"
                 />
@@ -96,9 +99,25 @@ const getBarColor = (value: number, invert?: boolean) => {
 </template>
 
 <style scoped>
+.risk-card.dark {
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --card-bg: linear-gradient(to bottom, rgba(5, 22, 62, 0.49), rgba(11, 24, 52, 0.49));
+  --card-border: rgba(255, 255, 255, 0.1);
+  --bar-bg: #0d1529;
+}
+
+.risk-card.light {
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg:  linear-gradient(to bottom, rgba(208, 231, 246, 0.656), rgba(255, 255, 255, 0.656));
+  --card-border: #ffffff;
+  --bar-bg: #687b98;
+}
+
 .risk-card {
-    background: rgba(5, 26, 61, 0.432);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 16px;
     padding: 24px;
     display: flex;
@@ -107,10 +126,10 @@ const getBarColor = (value: number, invert?: boolean) => {
 }
 
 .title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #94a3b8;
-    margin-bottom: 16px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 8px;
 }
 
 .gauge {
@@ -182,13 +201,13 @@ const getBarColor = (value: number, invert?: boolean) => {
 
 .factor-label {
     width: 96px;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .bar-bg {
     flex: 1;
     height: 6px;
-    background: #0f172a;
+    background: var(--bar-bg);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -202,7 +221,7 @@ const getBarColor = (value: number, invert?: boolean) => {
 .factor-value {
     width: 32px;
     text-align: right;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
 

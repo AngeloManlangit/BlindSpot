@@ -17,7 +17,8 @@ import type { ThreeDayForecast } from '@/type/types';
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler);
 
 const props = defineProps<{
-    forecast: ThreeDayForecast[]
+    forecast: ThreeDayForecast[],
+    isDark: boolean
 }>();
 
 const chartData = computed(() => ({
@@ -53,19 +54,19 @@ const chartOptions = {
     },
     scales: {
         y: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { size: 10 } }
+        grid: { color: props.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'},
+        ticks: { color: props.isDark ? '#94a3b8' : '#475569', font: { size: 10 } }
         },
         x: {
         grid: { display: false },
-        ticks: { color: '#94a3b8', font: { size: 10 } }
+        ticks: { color: props.isDark ? '#94a3b8' : '#475569', font: { size: 10 } }
         }
     }
 };
 </script>
 
 <template>
-    <div class="timeline-card">
+    <div :class="['timeline-card', isDark ? 'dark' : 'light']">
         <div class="card-header">
             <h3 class="title">Threat Timeline — Wind & Temperature</h3>
         </div>
@@ -76,9 +77,23 @@ const chartOptions = {
 </template>
 
 <style scoped>
+.timeline-card.dark {
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --card-bg: linear-gradient(to bottom, rgba(5, 22, 62, 0.49), rgba(11, 24, 52, 0.49));
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-card.light {
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg:  linear-gradient(to bottom, rgba(208, 231, 246, 0.656), rgba(255, 255, 255, 0.656));
+  --card-border: #ffffff;
+}
+
 .timeline-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -87,7 +102,7 @@ const chartOptions = {
 
 .title {
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin-bottom: 16px;
 }
 

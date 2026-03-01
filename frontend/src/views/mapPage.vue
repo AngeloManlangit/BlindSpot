@@ -186,7 +186,7 @@ const toggleStats = () => {
 
   <Transition name="fade">
     <div v-if="openStats" class="stats-overlay">
-        <riskStatistics :report="reportData" @close="openStats = false" />
+        <riskStatistics :report="reportData" :is-dark="isDark" @close="openStats = false" />
     </div>
   </Transition>
   

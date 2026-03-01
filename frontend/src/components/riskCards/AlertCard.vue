@@ -2,7 +2,8 @@
 import type { BlindSpot } from '@/type/types.ts';
 
 const props = defineProps<{
-    spots: BlindSpot[]
+    spots: BlindSpot[],
+    isDark: boolean
 }>();
 
 // Helper to handle color coding based on severity level
@@ -16,7 +17,7 @@ const getSeverityClass = (severity: string) => {
 </script>
 
 <template>
-    <section class="alert-card">
+    <section :class="['alert-card', isDark ? 'dark' : 'light']">
         <div class="alert-header">
             <h2 class="title">Blind Spot Alerts</h2>
             <span v-if="spots.length > 0" class="badge">
@@ -50,9 +51,23 @@ const getSeverityClass = (severity: string) => {
 </template>
 
 <style scoped>
+.alert-card.dark {
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --card-bg: linear-gradient(to bottom, rgba(5, 22, 62, 0.49), rgba(11, 24, 52, 0.49));
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+.alert-card.light {
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg:  linear-gradient(to bottom, rgba(208, 231, 246, 0.656), rgba(255, 255, 255, 0.656));
+  --card-border: #ffffff;
+}
+
 .alert-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 16px;
     padding: 20px;
 }
@@ -66,7 +81,7 @@ const getSeverityClass = (severity: string) => {
 
 .title {
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -114,7 +129,7 @@ const getSeverityClass = (severity: string) => {
 .alert-area {
     margin: 4px 0;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .action-link {

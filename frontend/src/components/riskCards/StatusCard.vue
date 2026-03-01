@@ -4,7 +4,8 @@ import type { RiskReport, HazardRow, BlindSpot } from '@/type/types';
 
 const props = defineProps<{
     type: 'weather' | 'power' | 'water' | 'comms';
-    report: RiskReport;
+    report: RiskReport,
+    isDark: boolean
 }>();
 
 // Derived logic for utility cards
@@ -29,12 +30,12 @@ const statusColor = computed(() => {
 </script>
 
 <template>
-    <div class="status-card" :class="`border-${getStatus}`">
+    <div :class="[`border-${getStatus}`, 'status-card', isDark ? 'dark' : 'light']">
         <div class="card-header">
-        <span class="title-group">
-            <h3 class="">{{ type.toUpperCase() }}</h3>
-        </span>
-        <div class="status-dot" :style="{ backgroundColor: statusColor }"></div>
+            <span class="title-group">
+                <h3 class="status-title">{{ type.toUpperCase() }}</h3>
+            </span>
+            <div class="status-dot" :style="{ backgroundColor: statusColor }" />
         </div>
 
         <div class="items-list">
@@ -58,9 +59,23 @@ const statusColor = computed(() => {
 </template>
 
 <style scoped>
+.status-card.dark {
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --card-bg: linear-gradient(to bottom, rgba(5, 22, 62, 0.49), rgba(11, 24, 52, 0.49));
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+.status-card.light {
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg:  linear-gradient(to bottom, rgba(208, 231, 246, 0.656), rgba(255, 255, 255, 0.656));
+  --card-border: #ffffff;
+}
+
 .status-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 16px;
     min-height: 140px;
@@ -74,17 +89,19 @@ const statusColor = computed(() => {
 
 .card-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
 }
 
 .status-title {
+    color: var(--text-main);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 800;
 }
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     box-shadow: 0 0 8px currentColor;
 }
@@ -94,6 +111,6 @@ const statusColor = computed(() => {
     justify-content: space-between;
     font-size: 0.75rem;
     margin-bottom: 4px;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 </style>

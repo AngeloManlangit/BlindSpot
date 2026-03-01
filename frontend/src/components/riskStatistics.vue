@@ -7,14 +7,15 @@ import ThreatTimeline from './riskCards/ThreatTimeline.vue';
 import AlertCard from './riskCards/AlertCard.vue';
 
 const props = defineProps<{
-    report: RiskReport
+    report: RiskReport,
+    isDark: boolean
 }>();
 </script>
 
 <template>
     <div class="dark-background" @click.self="$emit('close')">
         
-        <div class="popup-window">
+        <div :class="['popup-window', isDark ? 'dark' : 'light']">
             <div class="window-header">
                 <h1 class="title paytone-one-regular">RISK RADAR</h1>
                 <button class="close-x" @click="$emit('close')">&times;</button>
@@ -24,19 +25,19 @@ const props = defineProps<{
 
                 <div class="stats-grid">
                     <section class="left-column">
-                        <RiskLevel :report="report" />
-                        <AlertCard :spots="report.blindSpots" />
+                        <RiskLevel :report="report" :is-dark="isDark" />
+                        <AlertCard :spots="report.blindSpots" :is-dark="isDark" />
                     </section>
                     
                     <section class="right-column">
                         <div class="grid-main-top">
-                            <StatusCard type="weather" :report="report" />
-                            <StatusCard type="power" :report="report"/>
-                            <StatusCard type="water" :report="report" />
-                            <StatusCard type="comms" :report="report" />
+                            <StatusCard type="weather" :report="report" :is-dark="isDark" />
+                            <StatusCard type="power" :report="report" :is-dark="isDark"/>
+                            <StatusCard type="water" :report="report" :is-dark="isDark" />
+                            <StatusCard type="comms" :report="report" :is-dark="isDark" />
                         </div>
 
-                        <ThreatTimeline :forecast="report.threeDayForecast" />
+                        <ThreatTimeline :forecast="report.threeDayForecast" :is-dark="isDark" />
                     </section>
                     
                 </div>
@@ -56,14 +57,31 @@ const props = defineProps<{
     align-items: center;
     justify-content: center;
     padding: 20px;
+
+    /* Sets the font for the whole thing */
+    font-family: 'Outfit', sans-serif;
+}
+
+.popup-window.dark {
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --card-bg: radial-gradient(circle, rgba(11, 22, 46, 0.49), rgba(16, 40, 95, 0.49));
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+.popup-window.light {
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --card-bg: radial-gradient(circle, rgba(162, 198, 238, 0.666), rgba(255, 255, 255, 0.656));
+  --card-border: #ffffff;
 }
 
 .popup-window {
     width: 100%;
     max-width: 1500px;
     height: 90vh;
-    background: #18183a7f; 
-    border: 1px solid #ffffff3a; 
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 28px;
     display: flex;
     flex-direction: column;
@@ -83,7 +101,7 @@ const props = defineProps<{
 .title {
     position: absolute;
     left: 40px;
-    color: white;
+    color: var(--text-main);
 }
 
 .close-x {
@@ -91,7 +109,7 @@ const props = defineProps<{
     right: 20px;
     background: none;
     border: none;
-    color: white;
+    color: var(--text-main);
     font-size: 2rem;
     cursor: pointer;
     line-height: 1;
