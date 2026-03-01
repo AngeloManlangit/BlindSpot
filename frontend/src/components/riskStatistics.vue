@@ -23,17 +23,22 @@ const props = defineProps<{
             <div class="dashboard-body">
 
                 <div class="stats-grid">
-                    <RiskLevel class="grid-sidebar" :report="report" />
+                    <section class="left-column">
+                        <RiskLevel :report="report" />
+                        <AlertCard :spots="report.blindSpots" />
+                    </section>
                     
-                    <div class="grid-main-top">
-                        <StatusCard type="weather" :report="report" />
-                        <StatusCard type="power" :report="report"/>
-                        <StatusCard type="water" :report="report" />
-                        <StatusCard type="comms" :report="report" />
-                    </div>
+                    <section class="right-column">
+                        <div class="grid-main-top">
+                            <StatusCard type="weather" :report="report" />
+                            <StatusCard type="power" :report="report"/>
+                            <StatusCard type="water" :report="report" />
+                            <StatusCard type="comms" :report="report" />
+                        </div>
 
-                    <AlertCard class="grid-alerts" :spots="report.blindSpots" />
-                    <ThreatTimeline class="grid-chart" :forecast="report.threeDayForecast" />
+                        <ThreatTimeline :forecast="report.threeDayForecast" />
+                    </section>
+                    
                 </div>
             </div>
         </div>
@@ -96,6 +101,7 @@ const props = defineProps<{
 .dashboard-body {
     color: white;
     padding: 30px;
+    flex: 1;
     padding-top: 0px;
     overflow-y: auto;
 }
@@ -107,9 +113,18 @@ const props = defineProps<{
     margin-top: 20px;
 }
 
-.grid-sidebar {
+.left-column {
     grid-column: 1;
-    grid-row: 1 / span 3;
+}
+
+.right-column {
+    grid-column: 2;
+}
+
+.left-column, .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .grid-main-top {
@@ -119,23 +134,13 @@ const props = defineProps<{
     gap: 16px;
 }
 
-.grid-alerts {
-    grid-column: 2;
-    grid-row: 2;
-}
-
-.grid-chart {
-    grid-column: 2;
-    grid-row: 3;
-}
-
 .stats-grid > * {
     animation: slide-up 0.6s ease-out forwards;
     opacity: 0;
 }
 
 /* Stagger the appearance of each card */
-.grid-sidebar { animation-delay: 0.1s; }
+.grid-risk { animation-delay: 0.1s; }
 .grid-main-top { animation-delay: 0.2s; }
 .grid-alerts { animation-delay: 0.3s; }
 .grid-chart { animation-delay: 0.4s; }
