@@ -23,17 +23,17 @@ const props = defineProps<{
             <div class="dashboard-body">
 
                 <div class="stats-grid">
-                <RiskLevel class="grid-sidebar" :report="report" />
-                
-                <div class="grid-main-top">
-                    <StatusCard type="weather" :data="report.currentWeather" />
-                    <StatusCard type="power" />
-                    <StatusCard type="water" />
-                    <StatusCard type="comms" />
-                </div>
+                    <RiskLevel class="grid-sidebar" :report="report" />
+                    
+                    <div class="grid-main-top">
+                        <StatusCard type="weather" :report="report" />
+                        <StatusCard type="power" :report="report"/>
+                        <StatusCard type="water" :report="report" />
+                        <StatusCard type="comms" :report="report" />
+                    </div>
 
-                <AlertCard class="grid-alerts" :spots="report.blindSpots" />
-                <ThreatTimeline class="grid-chart" :forecast="report.threeDayForecast" />
+                    <AlertCard class="grid-alerts" :spots="report.blindSpots" />
+                    <ThreatTimeline class="grid-chart" :forecast="report.threeDayForecast" />
                 </div>
             </div>
         </div>
@@ -97,26 +97,36 @@ const props = defineProps<{
     color: white;
     padding: 30px;
     padding-top: 0px;
-    flex: 1;
     overflow-y: auto;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: 350px 1fr;
-    grid-template-rows: auto auto;
+    grid-template-columns: 450px 1fr;
     gap: 20px;
     margin-top: 20px;
 }
 
 .grid-sidebar {
-    grid-row: span 2;
+    grid-column: 1;
+    grid-row: 1 / span 3;
 }
 
 .grid-main-top {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2x2 grid for StatusCards */
-    gap: 20px;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    grid-template-rows: 1fr 1fr;   /* Two rows for the 4 cards */
+    gap: 16px;
+}
+
+.grid-alerts {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.grid-chart {
+    grid-column: 2;
+    grid-row: 3;
 }
 
 .stats-grid > * {
