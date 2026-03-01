@@ -95,9 +95,9 @@ const getBarColor = (value: number, invert?: boolean) => {
     </section>
 </template>
 
-<style scope>
+<style scoped>
 .risk-card {
-    background: rgba(8, 41, 94, 0.5);
+    background: rgba(5, 26, 61, 0.432);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 24px;

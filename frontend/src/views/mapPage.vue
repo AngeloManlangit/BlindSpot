@@ -105,6 +105,12 @@ const downloadPDF = async () => {
 
 // for the risk statistics
 import riskStatistics from '@/components/riskStatistics.vue'
+
+const openStats = ref(false)
+
+const toggleStats = () => {
+  openStats.value = !openStats.value
+}
 </script>
 
 <template>
@@ -120,10 +126,18 @@ import riskStatistics from '@/components/riskStatistics.vue'
 
     <div class="top-actions">
       <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
+      
+      <button @click="toggleStats" class="icon-btn">
+        <img src="/stats.svg" alt="Risk Radar" :class="{ 'invert': isDark }" />
+        <span class="tooltip">View Risk Radar</span>
+      </button>
+
       <button @click="openDocumentation" class="icon-btn">
         <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         <span class="tooltip">Documentation</span>
       </button>
+
+      
     </div>
 
     <div class="logo-wrapper">
@@ -170,9 +184,13 @@ import riskStatistics from '@/components/riskStatistics.vue'
     </div>
   </main>
 
-  <div class="stats-overlay">
-    <riskStatistics :report="reportData" />
-  </div>
+  <Transition name="fade">
+    <div v-if="openStats" class="stats-overlay">
+        <riskStatistics :report="reportData" @close="openStats = false" />
+    </div>
+  </Transition>
+  
+  
 </template>
 
 <style scoped>
@@ -376,24 +394,8 @@ import riskStatistics from '@/components/riskStatistics.vue'
 /*  Risk Statistics  */
 .stats-overlay {
   position: absolute;
-  top: 100px;
-  left: 24px;
-  z-index: 70; 
-  width: 350px;
+  z-index: 70;
   pointer-events: auto;
-  
-  animation: slideIn 0.5s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
 
 @media (max-width: 768px) {
@@ -405,5 +407,15 @@ import riskStatistics from '@/components/riskStatistics.vue'
     margin-top: 80px;
     padding: 0 12px;
   }
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 </style>
