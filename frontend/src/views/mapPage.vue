@@ -44,7 +44,6 @@ const openDocumentation = () => {
 }
 
 const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
-const toggleTowers = () => { showTowers.value = !showTowers.value }
 
 </script>
 
@@ -101,11 +100,6 @@ const toggleTowers = () => { showTowers.value = !showTowers.value }
         <span>Heatmap</span>
       </button>
 
-      <button :class="['toggles', { active: showTowers }]" @click="toggleTowers">
-        <RadioTower :size="15" :stroke-width="2" />
-        <span>Cell Towers</span>
-      </button>
-
       <button :class="['toggles', { active: mapStyle === 'satellite' }]" @click="changeMapStyle">
         <Map :size="15" :stroke-width="2" />
         <span>{{ mapStyle }}</span>
@@ -131,7 +125,6 @@ const toggleTowers = () => { showTowers.value = !showTowers.value }
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
 
 .main-container.dark {
   --bg: #050c18;
