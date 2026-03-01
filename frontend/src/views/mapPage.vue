@@ -100,6 +100,15 @@ const downloadPDF = async () => {
     `BlindSpot_Risk_Report_${reportData.value.location.replace(/\s+/g, '_')}`
   )
 }
+
+// for the risk statistics
+import riskStatistics from '@/components/riskStatistics.vue'
+
+const openStats = ref(false)
+
+const toggleStats = () => {
+  openStats.value = !openStats.value
+}
 </script>
 
 <template>
@@ -115,10 +124,18 @@ const downloadPDF = async () => {
 
     <div class="top-actions">
       <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
+      
+      <button @click="toggleStats" class="icon-btn">
+        <img src="/stats.svg" alt="Risk Radar" :class="{ 'invert': isDark }" />
+        <span class="tooltip">View Risk Radar</span>
+      </button>
+
       <button @click="openDocumentation" class="icon-btn">
         <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         <span class="tooltip">Documentation</span>
       </button>
+
+      
     </div>
 
     <div class="logo-wrapper">
@@ -132,7 +149,7 @@ const downloadPDF = async () => {
         </button>
       </div>
     </div>
-
+    
     <!-- PDF Template -->
     <div style="position: absolute; left: -9999px; top: 0;">
       <div ref="reportTemplate" style="background: white; color: #0f172a; width: 800px; padding: 50px; font-family: 'Helvetica', sans-serif;">
@@ -162,6 +179,14 @@ const downloadPDF = async () => {
       </div>
     </div>
   </main>
+
+  <Transition name="fade">
+    <div v-if="openStats" class="stats-overlay">
+        <riskStatistics :report="reportData" :is-dark="isDark" @close="openStats = false" />
+    </div>
+  </Transition>
+  
+  
 </template>
 
 <style scoped>
@@ -361,4 +386,32 @@ const downloadPDF = async () => {
 }
 
 .submit-btn:active { transform: scale(0.98); }
+
+/*  Risk Statistics  */
+.stats-overlay {
+  position: absolute;
+  z-index: 70;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .stats-overlay {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin-top: 80px;
+    padding: 0 12px;
+  }
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
 </style>

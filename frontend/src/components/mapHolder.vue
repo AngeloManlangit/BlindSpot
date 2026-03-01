@@ -5,7 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 const mapContainer = ref<HTMLElement | null>(null);
 
-var mapStyle = 'mapbox://styles/mapbox/navigation-day-v1'
+var mapStyle = 'mapbox://styles/mapbox/dark-v11'
   
 onMounted (() => {   
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
