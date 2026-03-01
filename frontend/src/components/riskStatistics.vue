@@ -32,8 +32,8 @@ const props = defineProps<{
                     <section class="right-column">
                         <div class="grid-main-top">
                             <StatusCard type="weather" :report="report" :is-dark="isDark" />
+                            <StatusCard type="hazards" :report="report" :is-dark="isDark" />
                             <StatusCard type="power" :report="report" :is-dark="isDark"/>
-                            <StatusCard type="water" :report="report" :is-dark="isDark" />
                             <StatusCard type="comms" :report="report" :is-dark="isDark" />
                         </div>
 
