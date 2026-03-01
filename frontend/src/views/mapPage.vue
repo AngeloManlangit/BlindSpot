@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
-// import { generateRiskReport } from '../../../backend/services/pdfReport';
+import { generateRiskReport } from '../../../backend/services/pdfReport';
 import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
 import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
@@ -91,7 +91,6 @@ const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
 }
 
-/*
 const downloadPDF = async () => {
   if (!reportTemplate.value) return
   reportData.value.generatedAt = formatNow()
@@ -101,7 +100,6 @@ const downloadPDF = async () => {
     `BlindSpot_Risk_Report_${reportData.value.location.replace(/\s+/g, '_')}`
   )
 }
-*/
 
 // for the risk statistics
 import riskStatistics from '@/components/riskStatistics.vue'
@@ -144,7 +142,6 @@ const toggleStats = () => {
       <img :src="isDark ? LogoDark : LogoWhite" alt="BlindSpotPH Logo" :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']" />
     </div>
 
-    <!--
     <div class="central-card-wrapper">
       <div class="card">
         <button @click="downloadPDF" class="submit-btn">
@@ -152,7 +149,6 @@ const toggleStats = () => {
         </button>
       </div>
     </div>
-    -->
     
     <!-- PDF Template -->
     <div style="position: absolute; left: -9999px; top: 0;">
