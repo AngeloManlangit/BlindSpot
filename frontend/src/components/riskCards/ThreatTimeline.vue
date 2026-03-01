@@ -10,8 +10,9 @@ import {
   CategoryScale,
   LinearScale,
   PointElement,
-  Filler
+  Filler,
 } from 'chart.js';
+import type { ChartOptions } from 'chart.js';
 import type { ThreeDayForecast } from '@/type/types';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler);
@@ -45,7 +46,7 @@ const chartData = computed(() => ({
     ]
 }));
 
-const chartOptions = {
+const chartOptions = computed<ChartOptions<'line'>>(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -62,7 +63,7 @@ const chartOptions = {
         ticks: { color: props.isDark ? '#94a3b8' : '#475569', font: { size: 10 } }
         }
     }
-};
+}));
 </script>
 
 <template>
