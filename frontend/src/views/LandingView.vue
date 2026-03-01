@@ -2,11 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
-
 const isDark = ref(true)
 const location = ref('')
 const router = useRouter()
-
 const handleSearch = () => {
   if (!location.value) return
   console.log("Checking risk for:", location.value)
@@ -48,7 +46,6 @@ import ThemeToggleButton from '@/components/themeToggleButton.vue'
 
     <div class="top-actions">
       <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
-
       <button @click="openDocumentation" class="icon-btn">
         <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         <span class="tooltip">Documentation</span>
