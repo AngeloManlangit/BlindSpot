@@ -102,6 +102,9 @@ const downloadPDF = async () => {
   )
 }
 */
+
+// for the risk statistics
+import riskStatistics from '@/components/riskStatistics.vue'
 </script>
 
 <template>
@@ -166,6 +169,10 @@ const downloadPDF = async () => {
       </div>
     </div>
   </main>
+
+  <div class="stats-overlay">
+    <riskStatistics :report="reportData" />
+  </div>
 </template>
 
 <style scoped>
@@ -365,4 +372,38 @@ const downloadPDF = async () => {
 }
 
 .submit-btn:active { transform: scale(0.98); }
+
+/*  Risk Statistics  */
+.stats-overlay {
+  position: absolute;
+  top: 100px;
+  left: 24px;
+  z-index: 70; 
+  width: 350px;
+  pointer-events: auto;
+  
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-overlay {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin-top: 80px;
+    padding: 0 12px;
+  }
+}
 </style>
