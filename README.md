@@ -17,18 +17,23 @@ Using **Blind Spot** is simple!
 4. Look around the provided map, check the stats, and whatever else you want!
 5. If you want a Risk Hazard pdf, click on "Generate PDF"
 
-## Technologies Used
+## Languages and Technologies Used
 
-### Front-End
-  - Vite
-  - Vue.js
+### Frontend
+[<img align="left" alt="Vue.js" width="40px" style="padding-right:10px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vuejs/vuejs-original.svg" />](https://vuejs.org "Vue.js")
+[<img align="left" alt="Vite.js" width="40px" style="padding-right:10px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg" />](https://vite.dev "Vite.js")
+[<img align="left" alt="Adobe Illustrator" width="40px" style="padding-right:10px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/illustrator/illustrator-original.svg" />](https://en.wikipedia.org/wiki/Adobe_Illustrator "Adobe Illustrator")
+<br>
 
-### Back-End
-  - Typescript
- 
-### AI Used
-  - Gemini Pro 2.5 
- 
+### Backend
+[<img align="left" alt="Typescript" width="40px" style="padding-right:10px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" />](https://www.typescriptlang.org "Typescript")
+[<img align="left" alt="Gemini Pro 2.5" width="40px" style="padding-right:10px" src="https://github.com/user-attachments/assets/aafed152-4d11-4071-a7eb-8919905c209d" />](https://gemini.google.com/ "Gemini Pro 2.5")
+[<img align="left" alt="Mapbox" width="40px" style="padding-right:10px" src="https://github.com/user-attachments/assets/90dd616f-eace-4768-b743-3b73469ea402" />](https://www.mapbox.com "Mapbox")
+[<img align="left" alt="Mapbox" width="40px" style="padding-right:10px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/npm/npm-original-wordmark.svg" />](https://www.npmjs.com "npm for multiple dependencies")
+<br><br>
+
+
+          
 ## Using the Program
 
 ### Recommended IDE Setup
@@ -45,6 +50,7 @@ git clone https://github.com/AngeloManlangit/BlindSpot.git
 #### Download the dependencies
 
 ```sh
+# run this inside the frontend and backend folders
 npm install
 ```
 
