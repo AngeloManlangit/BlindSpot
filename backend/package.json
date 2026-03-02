@@ -2,6 +2,9 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "html2canvas-pro": "^2.0.2",
+    "jspdf": "^4.2.0",
+    "jspdf-html2canvas": "^1.6.0",
     "node.js": "^0.0.1-security",
     "typescript": "^5.9.3"
   }

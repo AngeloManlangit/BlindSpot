@@ -282,7 +282,7 @@ html, body {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin: 0 0 8px 0; font-weight: 700; }
+.title { font-family: 'Outfit', sans-serif; font-size: 2rem; margin: 0 0 8px 0; font-weight: 800; }
 .description { font-family: 'Judson', serif; color: var(--text-muted); line-height: 1.4; margin-bottom: 32px; font-size: 1.1rem; }
 
 .search-section { width: 100%; max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }

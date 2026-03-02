@@ -6,10 +6,16 @@
 
 Blind Spot is an *offline-first*, AI-powered platform that predicts localized power and connectivity failures during typhoons, helping communities, hospitals, and LGUs prepare, respond, and recover before, during, and after disasters. Blind Spot aims to function as a disaster resilience engine within Cebu City that helps for the three phases around the full typhoon life cycle: pre-landfall, during landfall and post-landfall. Implementation will utilize a TypeScript-based backend for the risk engine and a Vue.js frontend for the offline-first PWA while a local caching system will store real-time data to ensure it remains accessible even when the device is offline. 
 
+<img width="1875" height="925" alt="image" src="https://github.com/user-attachments/assets/e8dc0c5d-3f7c-466d-9963-aeebb92a0496" />
+
 ## How to Use
 
 Using **Blind Spot** is simple!
-1. Search Sabrina Carpenter's "Nobody's Son" and sing to your heart's content
+1. Input a location you want to know the risk of
+2. Click "Check Risk"
+3. Wait for the data to be collated
+4. Look around the provided map, check the stats, and whatever else you want!
+5. If you want a Risk Hazard pdf, click on "Generate PDF"
 
 ## Technologies Used
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref,computed } from 'vue'
+import { ref,computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import '@/assets/theme-toggle/within.css'
@@ -30,14 +30,89 @@ const changeMapStyle = () => {
   mapindex.value = (mapindex.value + 1) % mapStyles.length
 }
 
-const router = useRouter()
+import { generateRiskReport } from '../../../backend/services/pdfReport';
+import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
-const handleSearch = () => {
-  if (!location.value) return
-  console.log("Checking risk for:", location.value)
+import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
+import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
+import ThemeToggleButton from '@/components/themeToggleButton.vue'
+import mapHolder from '@/components/mapHolder.vue'
+
+import PdfHeader from '@/components/pdf/PdfHeader.vue'
+import PdfLocation from '@/components/pdf/PdfLocation.vue'
+import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
+import PdfHazards from '@/components/pdf/PdfHazards.vue'
+import PdfThreeDayForecast from '@/components/pdf/PdfThreeDayForecast.vue'
+import PdfCurrentWeather from '@/components/pdf/PdfCurrentWeather.vue'
+import PdfWeekForecast from '@/components/pdf/PdfWeekForecast.vue'
+import PdfCellTowers from '@/components/pdf/PdfCellTowers.vue'
+import PdfBlindSpots from '@/components/pdf/PdfBlindSpots.vue'
+import PdfRecommendations from '@/components/pdf/PdfRecommendations.vue'
+import PdfMethodology from '@/components/pdf/PdfMethodology.vue'
+import PdfDataSources from '@/components/pdf/PdfDataSources.vue'
+import PdfFooter from '@/components/pdf/PdfFooter.vue'
+
+// State
+const router = useRouter()
+const pdfLogoDataUrl = ref('')
+const pdfLogoSvg = ref('')      
+const reportTemplate = ref<HTMLElement | null>(null)
+
+// Reactive report data,,, populate from API / map click 
+const reportData = ref<RiskReport>({
+  location: '',
+  city: '',
+  region: '',
+  coordinates: '',
+  elevation: '',
+  population: '',
+  generatedAt: '',
+  confidence: 0,
+  overallRisk: 0,
+  overallLevel: '',
+  hazard: 0,
+  exposure: 0,
+  vulnerability: 0,
+  capacity: 0,
+  hazards: [],
+  threeDayForecast: [],
+  currentWeather: {
+    temperature: '',
+    description: '',
+    humidity: '',
+    windSpeed: '',
+    visibility: '',
+  },
+  weekForecast: [],
+  cellTowers: [],
+  blindSpots: [],
+  recommendations: [],
+  methodology: '',
+  dataSources: [],
+})
+
+import { hazardLevelColor } from '@/utils/hazardLevelColor'
+
+const formatNow = (): string => {
+  return new Date().toLocaleString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  })
 }
 
 const home = () => router.push({ name: 'Landing' })
+onMounted(async () => {
+  try {
+    const res = await fetch('/blindspot-logo-white.svg')
+    const svg = await res.text()
+    pdfLogoSvg.value = svg
+
+    const blob = new Blob([svg], { type: 'image/svg+xml' })
+    pdfLogoDataUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    console.warn('Could not load PDF logo:', e)
+  }
+})
 
 const openDocumentation = () => {
   window.open('https://github.com/AngeloManlangit/BlindSpot', '_blank')
@@ -45,6 +120,24 @@ const openDocumentation = () => {
 
 const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
 
+const downloadPDF = async () => {
+  if (!reportTemplate.value) return
+  reportData.value.generatedAt = formatNow()
+
+  await generateRiskReport(
+    reportTemplate.value,
+    `BlindSpot_Risk_Report_${reportData.value.location.replace(/\s+/g, '_')}`
+  )
+}
+
+// for the risk statistics
+import riskStatistics from '@/components/riskStatistics.vue'
+
+const openStats = ref(false)
+
+const toggleStats = () => {
+  openStats.value = !openStats.value
+}
 </script>
 
 <template>
@@ -104,6 +197,8 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
         <Map :size="15" :stroke-width="2" />
         <span>{{ mapStyle }}</span>
       </button>
+
+      
     </div>
 
     <!-- Right Panel -->
@@ -115,17 +210,54 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
       <div class="panel-body">
         <p >Search a location to begin analysis.</p>
       </div>
-      <button class="download-btn">Download Report</button>
+      <button @click="downloadPDF" class="download-btn">Download Report</button>
       <button class="toggle-btn" :class="{ rotated: !panelopen }" @click="panelopen = !panelopen">
         ❮
       </button>
+    
+    <!-- PDF Template -->
+    <div style="position: absolute; left: -9999px; top: 0;">
+      <div ref="reportTemplate" style="background: white; color: #0f172a; width: 800px; padding: 50px; font-family: 'Helvetica', sans-serif;">
+        <PdfHeader :logo-svg="pdfLogoSvg" :logo-url="pdfLogoDataUrl" :data="reportData" />
+        <PdfLocation :data="reportData" />
+        <div
+          :style="`background: ${hazardLevelColor(reportData.overallLevel)}; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px;`"
+        >
+          <h3 style="margin: 0;">
+            OVERALL RISK: {{ reportData.overallRisk }}/100 — {{ reportData.overallLevel }}
+          </h3>
+          <p style="margin-top: 5px; font-size: 11px;">
+            Risk = (Hazard × Exposure × Vulnerability) / Capacity
+          </p>
+        </div>
+        <PdfRiskFactors :data="reportData" />
+        <PdfHazards :data="reportData" />
+        <PdfThreeDayForecast :data="reportData" />
+        <PdfCurrentWeather :data="reportData" />
+        <PdfWeekForecast :data="reportData" />
+        <PdfCellTowers :data="reportData" />
+        <PdfBlindSpots :data="reportData" />
+        <PdfRecommendations :data="reportData" />
+        <PdfMethodology :data="reportData" />
+        <PdfDataSources :data="reportData" />
+        <PdfFooter />
+      </div>
     </div>
 
   </main>
+
+  <Transition name="fade">
+    <div v-if="openStats" class="stats-overlay">
+        <riskStatistics :report="reportData" :is-dark="isDark" @close="openStats = false" />
+    </div>
+  </Transition>
+  
+  
 </template>
 
 <style scoped>
 
+/* --- THEME VARIABLES --- */
 .main-container.dark {
   --bg: #050c18;
   --text: #e8edf5;
@@ -162,9 +294,9 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
   --grad-c: #e2e8f0;
 }
 
-
 * { box-sizing: border-box; }
 
+/* --- CORE LAYOUT --- */
 .main-container {
   position: relative;
   display: flex;
@@ -246,6 +378,7 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
 }
 
+/* --- TOP ACTION BUTTONS --- */
 .top-actions {
   display: flex;
   flex-direction: column;
@@ -504,13 +637,15 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
   justify-content: center;
 }
 
-
-
 .download-btn {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
   border: 1px solid var(--glass-border);
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
   background: var(--accent);
   color: white;
   font-family: 'Syne', sans-serif;
@@ -531,7 +666,6 @@ const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
 .download-btn:active {
   transform: scale(0.98);
 }
-
 
 .toggle-btn {
   position: absolute;
