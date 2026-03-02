@@ -33,15 +33,6 @@ const changeMapStyle = () => {
 import { generateRiskReport } from '../../../backend/services/pdfReport';
 import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
-<<<<<<< HEAD
-/*
-import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
-import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
-import ThemeToggleButton from '@/components/themeToggleButton.vue'
-import mapHolder from '@/components/mapHolder.vue'
-*/
-=======
->>>>>>> afdc79c1fb7fb87d441008013b96c3c80069bae4
 import PdfHeader from '@/components/pdf/PdfHeader.vue'
 import PdfLocation from '@/components/pdf/PdfLocation.vue'
 import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
@@ -178,7 +169,7 @@ const toggleStats = () => {
         <button @click="home" class="icon-btn" title="Info">
           <Info :size="18" color="#eacd3e" :stroke-width="2.5" />
         </button>
-        <button class="icon-btn">
+        <button @click="toggleStats" class="icon-btn">
           <ChartColumn color="#eacd3e" :stroke-width="3" />
         </button>
         <button @click="openDocumentation" class="icon-btn" title="GitHub">
@@ -255,9 +246,9 @@ const toggleStats = () => {
         <PdfFooter />
       </div>
     </div>
-    </div>
   </main>
 
+  <!-- Stats overlay -->
   <Transition name="fade">
     <div v-if="openStats" class="stats-overlay">
         <riskStatistics :report="reportData" :is-dark="isDark" @close="openStats = false" />
@@ -698,4 +689,32 @@ const toggleStats = () => {
   left: -60px;
 }
 
+/*  Risk Statistics  */
+.stats-overlay {
+  position: absolute;
+  overflow: hidden;
+  z-index: 70;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .stats-overlay {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin-top: 80px;
+    padding: 0 12px;
+  }
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
 </style>
