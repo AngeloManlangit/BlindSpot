@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
-import { Info, RadioTower, Layers, Map,ChartColumn, Search } from 'lucide-vue-next'
+import { Info, Layers, Map,ChartColumn, Search } from 'lucide-vue-next'
 
 //static logo
 import LogoDark from "@/assets/svgs/cyclone_dark.svg"
@@ -33,11 +33,12 @@ const changeMapStyle = () => {
 import { generateRiskReport } from '../../../backend/services/pdfReport';
 import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
+/*
 import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
 import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
-
+*/
 import PdfHeader from '@/components/pdf/PdfHeader.vue'
 import PdfLocation from '@/components/pdf/PdfLocation.vue'
 import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
@@ -212,7 +213,7 @@ const toggleStats = () => {
       </div>
       <button @click="downloadPDF" class="download-btn">Download Report</button>
       <button class="toggle-btn" :class="{ rotated: !panelopen }" @click="panelopen = !panelopen">
-        ❮
+        ❯
       </button>
     
     <!-- PDF Template -->
@@ -243,7 +244,7 @@ const toggleStats = () => {
         <PdfFooter />
       </div>
     </div>
-
+    </div>
   </main>
 
   <Transition name="fade">
@@ -642,7 +643,7 @@ const toggleStats = () => {
   padding: 14px;
   border-radius: 14px;
   border: 1px solid var(--glass-border);
-
+}
 .submit-btn {
   width: 100%;
   padding: 16px;
@@ -670,9 +671,9 @@ const toggleStats = () => {
 .toggle-btn {
   position: absolute;
   top: 50%;
-  left: -22px;
-  width: 44px;
-  height: 44px;
+  left: -30px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -697,5 +698,7 @@ const toggleStats = () => {
 
 .toggle-btn.rotated {
   transform: translateY(-50%) rotate(180deg);
+  left: -60px;
 }
+
 </style>
