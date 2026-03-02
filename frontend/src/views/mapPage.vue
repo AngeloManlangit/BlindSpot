@@ -33,11 +33,6 @@ const changeMapStyle = () => {
 import { generateRiskReport } from '../../../backend/services/pdfReport';
 import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
 
-import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
-import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
-import ThemeToggleButton from '@/components/themeToggleButton.vue'
-import mapHolder from '@/components/mapHolder.vue'
-
 import PdfHeader from '@/components/pdf/PdfHeader.vue'
 import PdfLocation from '@/components/pdf/PdfLocation.vue'
 import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
@@ -130,6 +125,11 @@ const downloadPDF = async () => {
   )
 }
 
+// search bar
+const handleSearch = async () => {
+  console.log("poop, this needs to be done");
+}
+
 // for the risk statistics
 import riskStatistics from '@/components/riskStatistics.vue'
 
@@ -214,6 +214,7 @@ const toggleStats = () => {
       <button class="toggle-btn" :class="{ rotated: !panelopen }" @click="panelopen = !panelopen">
         ❮
       </button>
+    </div>
     
     <!-- PDF Template -->
     <div style="position: absolute; left: -9999px; top: 0;">
@@ -221,7 +222,9 @@ const toggleStats = () => {
         <PdfHeader :logo-svg="pdfLogoSvg" :logo-url="pdfLogoDataUrl" :data="reportData" />
         <PdfLocation :data="reportData" />
         <div
-          :style="`background: ${hazardLevelColor(reportData.overallLevel)}; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px;`"
+          :style="`background: ${hazardLevelColor(reportData.overallLevel)}; 
+                  color: white; padding: 20px; border-radius: 8px; 
+                  text-align: center; margin-bottom: 30px;`"
         >
           <h3 style="margin: 0;">
             OVERALL RISK: {{ reportData.overallRisk }}/100 — {{ reportData.overallLevel }}
@@ -642,20 +645,6 @@ const toggleStats = () => {
   padding: 14px;
   border-radius: 14px;
   border: 1px solid var(--glass-border);
-
-.submit-btn {
-  width: 100%;
-  padding: 16px;
-  background: var(--accent);
-  color: white;
-  font-family: 'Syne', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
 .download-btn:hover {
