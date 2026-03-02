@@ -23,7 +23,7 @@ const showHeatmap = ref(false)
 const showTowers = ref(false)
 
 //map things here 
-const mapStyles = [ 'Streets', 'Satellite', 'Dark', 'Light']
+const mapStyles = [ 'Normal', 'Streets', 'Satellite']
 const mapindex = ref(0)
 const mapStyle = computed(() => mapStyles[mapindex.value] )
 const changeMapStyle = () => {
@@ -147,7 +147,7 @@ const toggleStats = () => {
     <div class="bg-layer">
       <div class="gradient-overlay"></div>
       <div class="map-container">
-        <mapHolder />
+        <mapHolder :curr-style="mapStyles[mapindex] ?? 'Normal'" :is-dark="isDark"/>
       </div>
       <div v-if="isDark" class="grid-overlay"></div>
      
