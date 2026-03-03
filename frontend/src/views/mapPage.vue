@@ -56,6 +56,21 @@ const reportTemplate = ref<HTMLElement | null>(null)
 
 // Target location for the map
 const targetLocation = ref<{ lng: number; lat: number; name: string } | null>(null)
+const targetBbox = ref<[number, number, number, number] | null>(null) // [west, south, east, north]
+
+const fetchRiskReport = async (loc: { lng: number; lat: number; name: string }) => {
+  try {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+    const res = await fetch(
+      `${baseUrl}/api/risk?lat=${encodeURIComponent(String(loc.lat))}&lng=${encodeURIComponent(String(loc.lng))}&location=${encodeURIComponent(loc.name)}`
+    )
+    if (!res.ok) throw new Error(`Risk API ${res.status}`)
+    const data = (await res.json()) as RiskReport
+    reportData.value = data
+  } catch (e) {
+    console.warn('Failed to fetch risk report:', e)
+  }
+}
 
 // Reactive report data,,, populate from API / map click 
 const reportData = ref<RiskReport>({
@@ -92,6 +107,14 @@ const reportData = ref<RiskReport>({
 
 import { hazardLevelColor } from '@/utils/hazardLevelColor'
 
+const legendLevels = [
+  { key: 'LOW', label: 'Low', color: hazardLevelColor('LOW') },
+  { key: 'GUARDED', label: 'Guarded', color: hazardLevelColor('GUARDED') },
+  { key: 'ELEVATED', label: 'Elevated', color: hazardLevelColor('ELEVATED') },
+  { key: 'HIGH', label: 'High', color: hazardLevelColor('HIGH') },
+  { key: 'SEVERE', label: 'Severe', color: hazardLevelColor('SEVERE') },
+] as const
+
 const formatNow = (): string => {
   return new Date().toLocaleString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
@@ -101,19 +124,24 @@ const formatNow = (): string => {
 
 const home = () => router.push({ name: 'Landing' })
 
-// Geocode a location string to [lng, lat] using Mapbox
-const geocodeLocation = async (query: string): Promise<{ lng: number; lat: number; name: string } | null> => {
+type GeocodedLocation = { lng: number; lat: number; name: string; bbox?: [number, number, number, number] }
+
+// Geocode a location string to [lng, lat] (+ bbox when available) using Mapbox
+const geocodeLocation = async (query: string): Promise<GeocodedLocation | null> => {
   try {
     const token = import.meta.env.VITE_MAPBOX_TOKEN
     const encoded = encodeURIComponent(query)
     const res = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=1`
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=1&types=place,locality,neighborhood,district,region`
     )
     const data = await res.json()
     const feature = data.features?.[0]
     if (!feature) return null
     const [lng, lat] = feature.center
-    return { lng, lat, name: feature.place_name }
+    const bbox = Array.isArray(feature.bbox) && feature.bbox.length === 4
+      ? (feature.bbox as [number, number, number, number])
+      : undefined
+    return { lng, lat, name: feature.place_name, bbox }
   } catch (e) {
     console.warn('Geocoding failed:', e)
     return null
@@ -139,7 +167,9 @@ onMounted(async () => {
     const coords = await geocodeLocation(queryLocation)
     if (coords) {
       targetLocation.value = coords
+      targetBbox.value = coords.bbox ?? null
       reportData.value.location = coords.name
+      await fetchRiskReport(coords)
     }
   }
 })
@@ -212,8 +242,10 @@ const handleSearch = async () => {
   const coords = await geocodeLocation(query)
   if (coords) {
     targetLocation.value = coords
+    targetBbox.value = coords.bbox ?? null
     reportData.value.location = coords.name
     router.replace({ name: 'Map', query: { location: query } })
+    await fetchRiskReport(coords)
   }
 }
 
@@ -238,6 +270,9 @@ const toggleStats = () => {
           :curr-style="mapStyles[mapindex] ?? 'Normal'"
           :is-dark="isDark"
           :target-location="targetLocation"
+          :show-heatmap="showHeatmap"
+          :risk-report="reportData"
+          :target-bbox="targetBbox"
         />
       </div>
       <div v-if="isDark" class="grid-overlay"></div>
@@ -267,6 +302,19 @@ const toggleStats = () => {
           <img src="/github-icon.svg" alt="GitHub" :class="{ 'invert': isDark }" />
         </button>
         
+      </div>
+    </div>
+
+    <!-- Risk legend -->
+    <div class="risk-legend">
+      <div class="risk-legend-title">Risk Levels</div>
+      <div
+        v-for="lvl in legendLevels"
+        :key="lvl.key"
+        class="risk-legend-row"
+      >
+        <span class="risk-legend-swatch" :style="{ background: lvl.color }" />
+        <span class="risk-legend-label">{{ lvl.label }}</span>
       </div>
     </div>
 
@@ -343,7 +391,7 @@ const toggleStats = () => {
             OVERALL RISK: {{ reportData.overallRisk }}/100 — {{ reportData.overallLevel }}
           </h3>
           <p style="margin-top: 5px; font-size: 11px;">
-            Risk = (Hazard × Exposure × Vulnerability) / Capacity
+            Risk = (Hazard × Vulnerability × Exposure) / Capacity
           </p>
         </div>
         <PdfRiskFactors :data="reportData" />
@@ -587,6 +635,50 @@ const toggleStats = () => {
 }
 
 .invert { filter: invert(1); }
+
+
+.risk-legend {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 50;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 var(--glass-shine);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.risk-legend-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.risk-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.risk-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(15,23,42,0.4);
+}
+
+.risk-legend-label {
+  opacity: 0.9;
+}
 
 
 .search {

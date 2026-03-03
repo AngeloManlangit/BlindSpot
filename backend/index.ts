@@ -2,6 +2,8 @@ import express from 'express'
 import type { Request, Response } from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import path from 'path'
+import { readFile } from 'fs/promises'
 import type {
   RiskReport,
   HazardRow,
@@ -10,7 +12,7 @@ import type {
   WeatherCondition,
   BlindSpot,
   Recommendation,
-} from '../frontend/src/type/types'
+} from './type/types'
 
 dotenv.config()
 
@@ -19,6 +21,18 @@ const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
+
+// ─── Static datasets (Project NOAH, etc.) ──────────────────────────────────────
+app.get('/api/noah/fh_5yr', async (_req: Request, res: Response) => {
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'noah', 'PH072200000_FH_5yr.geojson')
+    const contents = await readFile(filePath, 'utf8')
+    res.setHeader('Content-Type', 'application/geo+json')
+    return res.send(contents)
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to load NOAH dataset', detail: String(err) })
+  }
+})
 
 // ─── ENV ──────────────────────────────────────────────────────────────────────
 const MAPBOX_TOKEN = process.env.VITE_MAPBOX_TOKEN   // reverse-geocode + elevation
@@ -180,9 +194,9 @@ app.get('/api/risk', async (req: Request, res: Response) => {
     // Capacity — inverse of hazard frequency (more quakes = less capacity)
     const capacityScore = clamp(100 - (quakeFreq / 20) * 40 - (floodScore * 0.2))
 
-    // Overall: Disaster Risk Reduction framework
-    // Risk = (Hazard × Exposure × Vulnerability) / Capacity
-    const rawRisk    = (hazardScore * exposureScore * vulnScore) / (capacityScore || 1)
+    // Overall
+    // Risk = (Hazard × Vulnerability × Exposure) / Capacity
+    const rawRisk    = (hazardScore * vulnScore * exposureScore) / (capacityScore || 1)
     const overallRisk = clamp(rawRisk / 100)  // normalize to 0–100
 
     // ── 6. Hazard rows ─────────────────────────────────────────────────────
@@ -274,7 +288,7 @@ app.get('/api/risk', async (req: Request, res: Response) => {
       blindSpots,
       recommendations,
       methodology:
-        'Risk = (Hazard × Exposure × Vulnerability) / Capacity. ' +
+        'Risk = (Hazard × Vulnerability × Exposure) / Capacity. ' +
         'Hazard derived from NOAH flood data (50%), USGS seismicity (30%), and wind speed (20%). ' +
         'Exposure from elevation data. Vulnerability from rainfall intensity. ' +
         'Capacity inversely proportional to event frequency.',
