@@ -25,7 +25,7 @@ const props = defineProps<{
                             alt="BlindSpotPH Logo"
                             :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
                         />
-                        <p class="sentence">Blind Spot is a predictive disaster intelligence platform designed to help Filipino communities anticipate infrastructure failures before typhoons strike. Instead of only tracking storm intensity, it analyzes how extreme weather may impact power grids, telecommunications, and other critical systems at a localized level. By modeling cascading failures—such as simultaneous electricity and cellular outages—it provides actionable risk assessments and early warnings for LGUs and residents. The goal is to shift disaster response in the Philippines from reactive recovery to proactive resilience, strengthening safer and more sustainable cities.
+                        <p class="sentence">Blind Spot is a predictive disaster intelligence platform designed to help Filipino communities anticipate infrastructure failures before typhoons strike. Instead of only tracking storm intensity, it analyzes how extreme weather may impact power grids, and other critical systems at a localized level. By modeling cascading failures—such as simultaneous electricity and cellular outages—it provides actionable risk assessments and early warnings for LGUs and residents. The goal is to shift disaster response in the Philippines from reactive recovery to proactive resilience, strengthening safer and more sustainable cities.
                         </p>
                     </div>
                 </section>
@@ -49,7 +49,7 @@ const props = defineProps<{
                                     <p class="grid-label">How It Works</p>
                                     <p>Blind Spot integrates real-time wind speed and rainfall data, population density and exposure metrics, grid-specific metadata (feeder age, outage history), and infrastructure capacity indicators (backup generators, redundancy).</p>
                                     <p>Using a weighted risk formula aligned with UNDRR standards: <strong>Risk = (Hazard × Exposure × Vulnerability) ÷ Capacity</strong></p>
-                                    <p>The system generates a Total Infrastructure Risk Score, Smart ETR, nearest stable communication hubs, AI-generated emergency protocols, and downloadable offline resilience reports.</p>
+                                    
                                 </div>
                             </div>
                             <div class="grid">
