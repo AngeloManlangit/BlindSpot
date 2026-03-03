@@ -11,6 +11,6 @@
     "skipLibCheck":    true,
     "resolveJsonModule": true
   },
-  "include": ["index.ts", "services/**/*"],
+  "include": ["index.ts", "services/**/*", "type/**/*"],
   "exclude": ["node_modules", "dist"]
 }
