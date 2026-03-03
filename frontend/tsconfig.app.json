@@ -6,7 +6,7 @@
     "src/**/*.vue",
     "src/shims-assets.d.ts",
     "../backend/services"
-  ],
+, "../backend/index.ts"  ],
   "exclude": [
     "src/**/__tests__/*"
   ],

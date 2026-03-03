@@ -2,14 +2,54 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
+
 const isDark = ref(true)
 const location = ref('')
 const router = useRouter()
-const handleSearch = () => {
-  if (!location.value) return
-  console.log("Checking risk for:", location.value)
 
-  router.push({ name: 'Map', query: { location: location.value } })
+const suggestions = ref<{ place_name: string }[]>([])
+const showSuggestions = ref(false)
+let debounceTimer: ReturnType<typeof setTimeout>
+
+const fetchSuggestions = async (query: string) => {
+  if (query.length < 2) {
+    suggestions.value = []
+    showSuggestions.value = false
+    return
+  }
+  try {
+    const token = import.meta.env.VITE_MAPBOX_TOKEN
+    const encoded = encodeURIComponent(query)
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=4&types=place,locality,neighborhood,district,region`
+    )
+    const data = await res.json()
+    suggestions.value = data.features ?? []
+    showSuggestions.value = suggestions.value.length > 0
+  } catch {
+    suggestions.value = []
+  }
+}
+
+const onInput = () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => fetchSuggestions(location.value), 300)
+}
+
+const selectSuggestion = (place: { place_name: string }) => {
+  location.value = place.place_name
+  suggestions.value = []
+  showSuggestions.value = false
+}
+
+const onBlur = () => {
+  setTimeout(() => { showSuggestions.value = false }, 150)
+}
+
+// --- Navigation ---
+const handleSearch = () => {
+  if (!location.value.trim()) return
+  router.push({ name: 'Map', query: { location: location.value.trim() } })
 }
 
 const openDocumentation = () => {
@@ -18,7 +58,6 @@ const openDocumentation = () => {
 
 import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
 import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
-
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 </script>
 
@@ -69,13 +108,29 @@ import ThemeToggleButton from '@/components/themeToggleButton.vue'
       <div class="search-section">
         <div class="input-group">
           <label class="label">Enter your location</label>
-          <input 
-            v-model="location"
-            type="text" 
-            placeholder="e.g. Cebu City, Philippines"
-            class="search-input"
-            @keyup.enter="handleSearch"
-          />
+          <div class="input-wrapper">
+            <input 
+              v-model="location"
+              type="text" 
+              placeholder="e.g. Cebu City, Philippines"
+              class="search-input"
+              @keyup.enter="handleSearch"
+              @input="onInput"
+              @blur="onBlur"
+              autocomplete="off"
+            />
+            <!-- Autocomplete suggestions -->
+            <div v-if="showSuggestions" class="suggestions">
+              <div
+                v-for="s in suggestions"
+                :key="s.place_name"
+                class="suggestion-item"
+                @mousedown.prevent="selectSuggestion(s)"
+              >
+                {{ s.place_name }}
+              </div>
+            </div>
+          </div>
         </div>
 
         <button @click="handleSearch" class="submit-btn">
@@ -288,6 +343,11 @@ html, body {
 .search-section { width: 100%; max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 .label { display: block; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; text-align: left; color: var(--accent); margin-bottom: 10px; }
 
+.input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
 .search-input {
   width: 100%;
   padding: 14px 20px;
@@ -305,6 +365,43 @@ html, body {
 .dark .search-input:focus { border-color: #3b82f6; }
 .light .search-input { border-color: #f1f5f9; }
 .light .search-input:focus { border-color: #2563eb; background: white; }
+
+/* Suggestions */
+.suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-family: 'Judson', serif;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.suggestion-item:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.suggestion-icon {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
 
 .submit-btn {
   width: 100%;
