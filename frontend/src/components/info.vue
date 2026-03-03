@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 
+import LogoDark from "@/assets/svgs/blindspot-logo-white.svg"
+import LogoWhite from "@/assets/svgs/blindspot-logo-dark-gray.svg"
 const props = defineProps<{
     isDark: boolean
 }>();
@@ -10,47 +12,80 @@ const props = defineProps<{
         
         <div :class="['popup-window', isDark ? 'dark' : 'light']">
             <div class="window-header">
-                <h1 class="title paytone-one-regular">BLIND SPOT </h1>
+                <h1 class="title paytone-one-regular">BLIND SPOT</h1>
                 <button class="close-x" @click="$emit('close')">&times;</button>
             </div>
 
             <div class="dashboard-body">
-
-        <div class="stats-grid">
-            <section class="left-column">
-                <div :is-dark="isDark" class = "grid">
-                    <p class ="title"> BLIND SPOT </p>
-                    <p class = "sentence">Blind Spot is a predictive disaster intelligence platform designed to help Filipino communities anticipate infrastructure failures before typhoons strike. Instead of only tracking storm intensity, it analyzes how extreme weather may impact power grids, telecommunications, and other critical systems at a localized level. By modeling cascading failures—such as simultaneous electricity and cellular outages—it provides actionable risk assessments and early warnings for LGUs and residents. The goal is to shift disaster response in the Philippines from reactive recovery to proactive resilience, strengthening safer and more sustainable cities.
-                    </p>
-                </div>
-
-        
-            </section>
-    
-        <section class="right-column">
-            <div class="grid-main-top">
-                <div :is-dark="isDark" class = "grid"> 1.Existing Solutions / Alternatives: (Identify any existing products, services, or approaches that address the same or similar problem) 
-                </div>
-                <div :is-dark="isDark" class = "grid"> 2. Existing Solutions / Alternatives: (Identify any existing products, services, or approaches that address the same or similar problem) 
-                </div >
-                <div :is-dark="isDark" class = "grid"> 1.Existing Solutions / Alternatives: (Identify any existing products, services, or approaches that address the same or similar problem) 
-                </div>
-                <div :is-dark="isDark" class = "grid"> 2. Existing Solutions / Alternatives: (Identify any existing products, services, or approaches that address the same or similar problem) 
+                <div class="stats-grid">
+                <section class="left-column">
+                    <div class="grid left-grid">
+                        <img
+                            :src="isDark ? LogoDark : LogoWhite"
+                            alt="BlindSpotPH Logo"
+                            :class="['logo', isDark ? 'logo-glow' : 'logo-shadow']"
+                        />
+                        <p class="sentence">Blind Spot is a predictive disaster intelligence platform designed to help Filipino communities anticipate infrastructure failures before typhoons strike. Instead of only tracking storm intensity, it analyzes how extreme weather may impact power grids, telecommunications, and other critical systems at a localized level. By modeling cascading failures—such as simultaneous electricity and cellular outages—it provides actionable risk assessments and early warnings for LGUs and residents. The goal is to shift disaster response in the Philippines from reactive recovery to proactive resilience, strengthening safer and more sustainable cities.
+                        </p>
+                    </div>
+                </section>
+            
+                <section class="right-column">
+                     <div class="grid-main-top">
+                        <div class="grid">
+                            <div>
+                                <p class="grid-label">Vision</p>
+                                <p>To build a future where Filipino cities—starting with Cebu—are powered by predictive infrastructure intelligence, ensuring that no community faces disasters blind to cascading failures.</p>
+                                <p>Blind Spot envisions a resilient Philippines where data-driven foresight protects lives, safeguards essential services, and strengthens sustainable urban development in alignment with SDG 11: Sustainable Cities and Communities.</p>
+                            </div>
+                        </div>
+                    <div class="grid">
+                        <div>                                    <p class="grid-label">Mission</p>
+                           <p>To transform disaster response in the Philippines from reactive recovery to predictive resilience by delivering localized, infrastructure-level intelligence that remains accessible even during total power and connectivity failures.</p>
+                        <p>Blind Spot aims to empower communities, critical institutions, and local governments with actionable foresight—reducing economic losses, preventing chaotic evacuations, and enabling coordinated, sustainable disaster management.</p>                        </div>
+                            </div>
+                            <div class="grid">
+                                <div>
+                                    <p class="grid-label">How It Works</p>
+                                    <p>Blind Spot integrates real-time wind speed and rainfall data, population density and exposure metrics, grid-specific metadata (feeder age, outage history), and infrastructure capacity indicators (backup generators, redundancy).</p>
+                                    <p>Using a weighted risk formula aligned with UNDRR standards: <strong>Risk = (Hazard × Exposure × Vulnerability) ÷ Capacity</strong></p>
+                                    <p>The system generates a Total Infrastructure Risk Score, Smart ETR, nearest stable communication hubs, AI-generated emergency protocols, and downloadable offline resilience reports.</p>
+                                </div>
+                            </div>
+                            <div class="grid">
+                                <div>
+                                    <p class="grid-label">Target Beneficiaries</p>
+                                    <p><strong>Primary:</strong> Local Government Units (DRRM Offices)</p>
+                                    <p><strong>Secondary:</strong> Hospitals, data centers, banks, BPO companies, factories</p>
+                                    <p><strong>Tertiary:</strong> Insurance companies, real estate developers, and residents in high-risk urban areas like Cebu City</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
-
-         
-
-        </section>
-    
-</div>
-</div>
-            
         </div>
     </div>
 </template>
 
 <style scoped>
+.logo { width: 180px; transition: all 0.2s; }
+.logo-glow {
+    filter: drop-shadow(0 0 12px rgba(99, 179, 255, 0.5));
+}
+
+.logo-shadow {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+}
+
+.grid-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
 .title {
     text-align: center;
     font-size: 1.1rem;
@@ -61,9 +96,10 @@ const props = defineProps<{
 
 .sentence {
     text-align: left;
-    line-height: 1.6;
-    font-size: 0.95rem;
+    line-height: 1.7;
+    font-size: 0.875rem;
     color: var(--text-main);
+    margin: 0;
 }
 
 .dark-background {
@@ -95,13 +131,6 @@ const props = defineProps<{
   --card-border: #ffffff;
 }
 
-.item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    margin-bottom: 4px;
-    color: var(--text-muted);
-}
 
 .popup-window {
     width: 100%;
@@ -149,16 +178,17 @@ const props = defineProps<{
 /* Content Layout */
 .dashboard-body {
     color: white;
-    padding: 30px;
+    padding: 12px 20px;
     flex: 1;
     padding-top: 0px;
-    overflow-y: auto;
+    
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: 450px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: 20px;
+
     margin-top: 20px;
 }
 
@@ -173,14 +203,16 @@ const props = defineProps<{
 .left-column, .right-column {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    min-width: 0;
 }
 
 .grid-main-top {
     display: grid;
     grid-template-columns: 1fr 1fr; /* Two equal columns */
     grid-template-rows: 1fr 1fr;   /* Two rows for the 4 cards */
-    gap: 16px;
+    gap: 12px;
+    height:100%;
+    min-height: 0;
 }
 
 .stats-grid > * {
@@ -191,13 +223,25 @@ const props = defineProps<{
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 16px;
-    padding: 20px;
+    padding: 12px;
     color: var(--text-main);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    overflow: hidden;
+    min-height: 0;
     
+    
+}.left-grid {
+    flex-direction: column;
+    align-items: center;
+    justify-content:top;
+    gap: 50px;
+    height: 100%;
 }
 /* Stagger the appearance of each card */
 .grid-risk { animation-delay: 0.1s; }
