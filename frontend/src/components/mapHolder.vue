@@ -19,8 +19,8 @@ const props = defineProps<{
 const getMapStyle = (style: string, dark: boolean) => {
   if (style === 'Normal') {
     return dark
-      ? 'mapbox://styles/mapbox/dark-v11'
-      : 'mapbox://styles/mapbox/light-v11';
+      ? 'mapbox://styles/mapbox/light-v11'
+      : 'mapbox://styles/mapbox/dark-v11';
   }
   if (style === 'Streets') return 'mapbox://styles/mapbox/streets-v12';
   return 'mapbox://styles/mapbox/satellite-streets-v12';
