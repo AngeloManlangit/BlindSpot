@@ -2,7 +2,6 @@
 import mapboxgl from 'mapbox-gl';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { RiskReport } from '@/type/types'
 import { hazardLevelColor } from '@/utils/hazardLevelColor'
 
 const mapContainer = ref<HTMLElement | null>(null);
@@ -16,12 +15,10 @@ const props = defineProps<{
   currStyle: string,
   isDark: boolean,
   targetLocation?: { lng: number; lat: number; name?: string } | null,
-  showHeatmap?: boolean,
-  riskReport?: RiskReport,
-  targetBbox?: [number, number, number, number] | null
+  radiusKm: number,
+  riskLevel: string,
+  showRisk?: boolean
 }>();
-
-type HeatPoint = { lng: number; lat: number; weight: number }
 
 // Convert style prop into Mapbox style URL
 const getMapStyle = (style: string, dark: boolean) => {
@@ -33,119 +30,6 @@ const getMapStyle = (style: string, dark: boolean) => {
   if (style === 'Streets') return 'mapbox://styles/mapbox/streets-v12';
   return 'mapbox://styles/mapbox/satellite-streets-v12';
 };
-
-const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
-
-// Convert meters to approx degrees latitude at equator (good enough for small radii)
-const metersToDegrees = (meters: number) => meters / 111_320
-
-const computeRiskScore0to100 = (report?: RiskReport): number => {
-  if (!report) return 0
-
-  // If the backend already computed an overall score, use it directly.
-  const overall = Number(report.overallRisk)
-  if (Number.isFinite(overall) && overall > 0) return clamp(overall, 0, 100)
-
-  // Otherwise compute from the provided factors.
-  const hazard = Number(report.hazard) || 0
-  const capacity = Number(report.capacity) || 0
-  const vulnerability = Number(report.vulnerability) || 0
-  const exposure = Number(report.exposure) || 0
-
-  // risk = (hazard*vulnerability*exposure)/capacity
-  // Factors are 0–100. Normalize into 0–100.
-  const raw = (hazard * vulnerability * exposure) / (capacity || 1)
-  return clamp(raw / 100, 0, 100)
-}
-
-const buildHeatPoints = (center: { lng: number; lat: number }, baseRisk0to100: number): HeatPoint[] => {
-  // Create a small cloud around the center so Mapbox can render a true heatmap.
-  // Keep radius modest so it reads like a neighborhood risk surface.
-  const points: HeatPoint[] = []
-  const radiusMeters = 1200
-  const count = 160
-
-  for (let i = 0; i < count; i++) {
-    // Box-Muller for roughly gaussian spread
-    const u = 1 - Math.random()
-    const v = 1 - Math.random()
-    const r = Math.sqrt(-2.0 * Math.log(u))
-    const theta = 2.0 * Math.PI * v
-
-    // 0..~3 sigma; scale to radius
-    const dxMeters = (r * Math.cos(theta)) * (radiusMeters / 3)
-    const dyMeters = (r * Math.sin(theta)) * (radiusMeters / 3)
-
-    const lat = center.lat + metersToDegrees(dyMeters)
-    const lng = center.lng + (metersToDegrees(dxMeters) / Math.cos(center.lat * Math.PI / 180))
-
-    const dist = Math.sqrt(dxMeters * dxMeters + dyMeters * dyMeters)
-    const decay = clamp(1 - dist / radiusMeters, 0, 1)
-    points.push({ lng, lat, weight: baseRisk0to100 * decay })
-  }
-
-  // Ensure the exact center exists
-  points.push({ lng: center.lng, lat: center.lat, weight: baseRisk0to100 })
-  return points
-}
-
-const ensureRiskHeatmap = () => {
-  if (!map.value) return
-
-  const shouldShow = Boolean(props.showHeatmap && props.targetLocation)
-  const sourceId = 'risk-heatmap-source'
-  const layerId = 'risk-heatmap-layer'
-
-  if (!shouldShow) {
-    if (map.value.getLayer(layerId)) map.value.removeLayer(layerId)
-    if (map.value.getSource(sourceId)) map.value.removeSource(sourceId)
-    return
-  }
-
-  const center = { lng: props.targetLocation!.lng, lat: props.targetLocation!.lat }
-  const baseRisk = computeRiskScore0to100(props.riskReport)
-  const pts = buildHeatPoints(center, baseRisk)
-
-  const data: GeoJSON.FeatureCollection<GeoJSON.Point, { weight: number }> = {
-    type: 'FeatureCollection',
-    features: pts.map((p) => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-      properties: { weight: p.weight },
-    })),
-  }
-
-  if (map.value.getSource(sourceId)) {
-    map.value.getSource(sourceId).setData(data)
-  } else {
-    map.value.addSource(sourceId, { type: 'geojson', data })
-  }
-
-  if (!map.value.getLayer(layerId)) {
-    map.value.addLayer({
-      id: layerId,
-      type: 'heatmap',
-      source: sourceId,
-      paint: {
-        'heatmap-weight': ['interpolate', ['linear'], ['get', 'weight'], 0, 0, 100, 1],
-        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 13, 1.3, 16, 2.0],
-        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 18, 13, 32, 16, 48],
-        'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.65, 16, 0.85],
-        'heatmap-color': [
-          'interpolate',
-          ['linear'],
-          ['heatmap-density'],
-          0, 'rgba(0,0,0,0)',
-          0.2, 'rgba(59,130,246,0.35)',
-          0.4, 'rgba(16,185,129,0.45)',
-          0.6, 'rgba(234,179,8,0.55)',
-          0.8, 'rgba(249,115,22,0.65)',
-          1, 'rgba(239,68,68,0.75)',
-        ],
-      },
-    })
-  }
-}
 
 const ensureNoahFloodLayer = async () => {
   if (!map.value) return
@@ -202,101 +86,96 @@ const ensureNoahFloodLayer = async () => {
   }
 }
 
-const buildCirclePolygon = (center: { lng: number; lat: number }, radiusMeters: number) => {
-  const steps = 64
-  const coords: [number, number][] = []
-  const latRad = center.lat * Math.PI / 180
-
-  for (let i = 0; i <= steps; i++) {
-    const theta = (i / steps) * 2 * Math.PI
-    const dx = Math.cos(theta) * radiusMeters
-    const dy = Math.sin(theta) * radiusMeters
-
-    const dLat = metersToDegrees(dy)
-    const dLng = metersToDegrees(dx) / Math.cos(latRad)
-
-    coords.push([center.lng + dLng, center.lat + dLat])
-  }
-
-  return {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [coords],
-        },
-        properties: {},
-      },
-    ],
-  } as const
-}
-
-const ensureRiskAreaPolygon = () => {
-  if (!map.value) return
-
-  const hasCenter = Boolean(props.targetLocation)
-  const sourceId = 'risk-area-source'
-  const fillId = 'risk-area-fill'
-  const lineId = 'risk-area-line'
-
-  if (!hasCenter) {
-    if (map.value.getLayer(fillId)) map.value.removeLayer(fillId)
-    if (map.value.getLayer(lineId)) map.value.removeLayer(lineId)
-    if (map.value.getSource(sourceId)) map.value.removeSource(sourceId)
-    return
-  }
-
-  // Single focus area: circular zone around the selected point
-  const center = { lng: props.targetLocation!.lng, lat: props.targetLocation!.lat }
-  const data = buildCirclePolygon(center, 1500) // ~1.5km radius
-
-  if (map.value.getSource(sourceId)) {
-    map.value.getSource(sourceId).setData(data)
-  } else {
-    map.value.addSource(sourceId, { type: 'geojson', data })
-  }
-
-  const level = props.riskReport?.overallLevel ?? ''
-  const fillColor = hazardLevelColor(level)
-
-  if (!map.value.getLayer(fillId)) {
-    map.value.addLayer({
-      id: fillId,
-      type: 'fill',
-      source: sourceId,
-      paint: {
-        'fill-color': fillColor,
-        'fill-opacity': 0.22,
-      },
-    })
-  } else {
-    map.value.setPaintProperty(fillId, 'fill-color', fillColor)
-  }
-
-  if (!map.value.getLayer(lineId)) {
-    map.value.addLayer({
-      id: lineId,
-      type: 'line',
-      source: sourceId,
-      paint: {
-        'line-color': fillColor,
-        'line-width': 2,
-        'line-opacity': 0.7,
-      },
-    })
-  } else {
-    map.value.setPaintProperty(lineId, 'line-color', fillColor)
-  }
-}
-
 // Clean marker safely
 const clearMarker = () => {
   if (marker.value) {
     marker.value.remove();
     marker.value = null;
   }
+};
+
+function createCircleGeoJSON(center: [number, number], radiusKm: number): GeoJSON.Feature {
+  const [lng, lat] = center;
+  const points = 64;
+  const coords: [number, number][] = [];
+  const distanceX = radiusKm / (111.32 * Math.cos(lat * Math.PI / 180));
+  const distanceY = radiusKm / 110.574;
+
+  for (let i = 0; i <= points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    coords.push([lng + x, lat + y]);
+  }
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {}
+  };
+}
+
+const updateRiskLayer = () => {
+  if (!map.value || !props.targetLocation) return;
+
+  const sourceId = 'risk-circle-source';
+  const fillId = 'risk-circle-fill';
+  const roadHighlightId = 'risk-roads-highlight'; // New ID for road layer
+  
+  const center: [number, number] = [props.targetLocation.lng, props.targetLocation.lat];
+  const geojson = createCircleGeoJSON(center, props.radiusKm);
+  const color = hazardLevelColor(props.riskLevel);
+
+  // 1. Update the circular area source
+  if (!map.value.getSource(sourceId)) {
+    map.value.addSource(sourceId, { type: 'geojson', data: geojson });
+    
+    // The existing transparent fill
+    map.value.addLayer({
+      id: fillId,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': color,
+        'fill-opacity': 0.15 // Lower opacity to make roads pop
+      },
+      layout: { visibility: props.showRisk ? 'visible' : 'none' }
+    });
+  } else {
+    map.value.getSource(sourceId).setData(geojson);
+  }
+
+  // 2. Add or Update the Road Highlight Layer
+  // We use the 'composite' source and 'road' layer from Mapbox's default tileset
+  if (!map.value.getLayer(roadHighlightId)) {
+    map.value.addLayer({
+      id: roadHighlightId,
+      type: 'line',
+      source: 'composite',
+      'source-layer': 'road',
+      paint: {
+        'line-color': color,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2, 16, 6],
+        'line-opacity': 0.8
+      },
+      layout: { 
+        'line-join': 'round', 
+        'line-cap': 'round',
+        visibility: props.showRisk ? 'visible' : 'none' 
+      }
+    });
+  }
+
+  // 3. Apply the Spatial Filter
+  // This tells Mapbox to ONLY show roads within the circle geometry
+  map.value.setFilter(roadHighlightId, [
+    'within', 
+    geojson // This uses the Polygon we just generated
+  ]);
+
+  // Update visibility and colors reactively
+  map.value.setPaintProperty(roadHighlightId, 'line-color', color);
+  map.value.setLayoutProperty(roadHighlightId, 'visibility', props.showRisk ? 'visible' : 'none');
+  map.value.setPaintProperty(fillId, 'fill-color', color);
 };
 
 // Fly and add marker
@@ -354,17 +233,15 @@ onMounted(() => {
     ensureNoahFloodLayer()
     if (props.targetLocation) {
       flyToLocation(props.targetLocation);
+      updateRiskLayer();
     }
-    ensureRiskAreaPolygon()
-    ensureRiskHeatmap()
   });
 
   // When the style is swapped (setStyle), custom layers/sources need re-adding.
   map.value.on('style.load', () => {
     noahLoaded.value = false
     ensureNoahFloodLayer()
-    ensureRiskAreaPolygon()
-    ensureRiskHeatmap()
+    updateRiskLayer()
   })
 });
 
@@ -376,6 +253,18 @@ watch(
       map.value.setStyle(getMapStyle(newStyle, newDark));
     }
   }
+);
+
+// Watch for changes to update the risk circle
+watch(
+  () => [props.targetLocation, props.radiusKm, props.riskLevel, props.showRisk],
+  () => {
+    if (props.targetLocation) {
+      flyToLocation(props.targetLocation);
+      updateRiskLayer();
+    }
+  },
+  { deep: true }
 );
 
 // Watch location changes
@@ -391,13 +280,9 @@ watch(
 
     if (map.value.isStyleLoaded()) {
       flyToLocation(newLoc);
-      ensureRiskAreaPolygon()
-      ensureRiskHeatmap()
     } else {
       map.value.once('load', () => {
         flyToLocation(newLoc)
-        ensureRiskAreaPolygon()
-        ensureRiskHeatmap()
       });
     }
   },
@@ -405,21 +290,38 @@ watch(
 );
 
 watch(
-  [() => props.showHeatmap, () => props.riskReport, () => props.targetBbox],
-  () => {
-    if (!map.value) return
-    if (map.value.isStyleLoaded()) {
-      ensureRiskAreaPolygon()
-      ensureRiskHeatmap()
+  () => [props.targetLocation, props.radiusKm, props.riskLevel],
+  ([newLoc, newRadius, newLevel]) => {
+    if (!map.value || !newLoc) {
+      if (map.value?.getSource('risk-circle-source')) {
+        map.value.getSource('risk-circle-source').setData({ type: 'FeatureCollection', features: [] });
+      }
+      return;
+    }
+    const radius = Number(newRadius);
+    const center: [number, number] = [newLoc.lng, newLoc.lat];
+    const geojson = createCircleGeoJSON(center, radius); // Uses your radiusKm prop
+    const color = hazardLevelColor(newLevel as string); // Uses your overallLevel risk color
+
+    if (!map.value.getSource('risk-circle-source')) {
+      map.value.addSource('risk-circle-source', { type: 'geojson', data: geojson });
+      map.value.addLayer({
+        id: 'risk-circle-fill',
+        type: 'fill',
+        source: 'risk-circle-source',
+        paint: {
+          'fill-color': color,
+          'fill-opacity': 0.3,
+          'fill-outline-color': color
+        }
+      });
     } else {
-      map.value.once('load', () => {
-        ensureRiskAreaPolygon()
-        ensureRiskHeatmap()
-      })
+      map.value.getSource('risk-circle-source').setData(geojson);
+      map.value.setPaintProperty('risk-circle-fill', 'fill-color', color);
     }
   },
   { deep: true }
-)
+);
 
 // Cleanup on unmount
 onUnmounted(() => {

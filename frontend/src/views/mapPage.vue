@@ -5,7 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
-import { Info, Layers, Map, ChartColumn, Search } from 'lucide-vue-next'
+import { Info, Layers, Map, ChartColumn, Search, MapPin } from 'lucide-vue-next'
 
 //static logo
 import LogoDark from "@/assets/svgs/cyclone_dark.svg"
@@ -20,7 +20,7 @@ const location = ref('')
 const hover = ref(false)
 const panelopen = ref(false)
 const showHeatmap = ref(false)
-const showTowers = ref(false)
+const riskRadius = ref(1.5) // default: 1.5km
 
 //map things here 
 const mapStyles = [ 'Normal', 'Streets', 'Satellite']
@@ -56,7 +56,6 @@ const reportTemplate = ref<HTMLElement | null>(null)
 
 // Target location for the map
 const targetLocation = ref<{ lng: number; lat: number; name: string } | null>(null)
-const targetBbox = ref<[number, number, number, number] | null>(null) // [west, south, east, north]
 
 const fetchRiskReport = async (loc: { lng: number; lat: number; name: string }) => {
   try {
@@ -138,10 +137,7 @@ const geocodeLocation = async (query: string): Promise<GeocodedLocation | null> 
     const feature = data.features?.[0]
     if (!feature) return null
     const [lng, lat] = feature.center
-    const bbox = Array.isArray(feature.bbox) && feature.bbox.length === 4
-      ? (feature.bbox as [number, number, number, number])
-      : undefined
-    return { lng, lat, name: feature.place_name, bbox }
+    return { lng, lat, name: feature.place_name }
   } catch (e) {
     console.warn('Geocoding failed:', e)
     return null
@@ -167,7 +163,6 @@ onMounted(async () => {
     const coords = await geocodeLocation(queryLocation)
     if (coords) {
       targetLocation.value = coords
-      targetBbox.value = coords.bbox ?? null
       reportData.value.location = coords.name
       await fetchRiskReport(coords)
     }
@@ -242,7 +237,6 @@ const handleSearch = async () => {
   const coords = await geocodeLocation(query)
   if (coords) {
     targetLocation.value = coords
-    targetBbox.value = coords.bbox ?? null
     reportData.value.location = coords.name
     router.replace({ name: 'Map', query: { location: query } })
     await fetchRiskReport(coords)
@@ -270,9 +264,9 @@ const toggleStats = () => {
           :curr-style="mapStyles[mapindex] ?? 'Normal'"
           :is-dark="isDark"
           :target-location="targetLocation"
-          :show-heatmap="showHeatmap"
-          :risk-report="reportData"
-          :target-bbox="targetBbox"
+          :radius-km="riskRadius"
+          :show-risk="showHeatmap"
+          :risk-level="reportData.overallLevel"
         />
       </div>
       <div v-if="isDark" class="grid-overlay"></div>
@@ -349,7 +343,7 @@ const toggleStats = () => {
       <div class="divider"></div>
 
       <button :class="['toggles', { active: showHeatmap }]" @click="toggleHeatmap">
-        <Layers :size="15" :stroke-width="2" />
+        <MapPin :size="15" :stroke-width="2" />
         <span>Heatmap</span>
       </button>
 
