@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref,computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 import '@/assets/theme-toggle/within.css'
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
-import { Info, Layers, Map,ChartColumn, Search } from 'lucide-vue-next'
+import { Info, Layers, Map, ChartColumn, Search } from 'lucide-vue-next'
 
 //static logo
 import LogoDark from "@/assets/svgs/cyclone_dark.svg"
@@ -49,9 +49,13 @@ import PdfFooter from '@/components/pdf/PdfFooter.vue'
 
 // State
 const router = useRouter()
+const route = useRoute()
 const pdfLogoDataUrl = ref('')
 const pdfLogoSvg = ref('')      
 const reportTemplate = ref<HTMLElement | null>(null)
+
+// Target location for the map
+const targetLocation = ref<{ lng: number; lat: number; name: string } | null>(null)
 
 // Reactive report data,,, populate from API / map click 
 const reportData = ref<RiskReport>({
@@ -96,16 +100,47 @@ const formatNow = (): string => {
 }
 
 const home = () => router.push({ name: 'Landing' })
+
+// Geocode a location string to [lng, lat] using Mapbox
+const geocodeLocation = async (query: string): Promise<{ lng: number; lat: number; name: string } | null> => {
+  try {
+    const token = import.meta.env.VITE_MAPBOX_TOKEN
+    const encoded = encodeURIComponent(query)
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=1`
+    )
+    const data = await res.json()
+    const feature = data.features?.[0]
+    if (!feature) return null
+    const [lng, lat] = feature.center
+    return { lng, lat, name: feature.place_name }
+  } catch (e) {
+    console.warn('Geocoding failed:', e)
+    return null
+  }
+}
+
 onMounted(async () => {
+  // Load PDF logo
   try {
     const res = await fetch('/blindspot-logo-white.svg')
     const svg = await res.text()
     pdfLogoSvg.value = svg
-
     const blob = new Blob([svg], { type: 'image/svg+xml' })
     pdfLogoDataUrl.value = URL.createObjectURL(blob)
   } catch (e) {
     console.warn('Could not load PDF logo:', e)
+  }
+
+  // Read location from route query and fly to it
+  const queryLocation = route.query.location as string | undefined
+  if (queryLocation) {
+    location.value = queryLocation
+    const coords = await geocodeLocation(queryLocation)
+    if (coords) {
+      targetLocation.value = coords
+      reportData.value.location = coords.name
+    }
   }
 })
 
@@ -125,9 +160,61 @@ const downloadPDF = async () => {
   )
 }
 
-// search bar
+// --- Autocomplete ---
+const suggestions = ref<{ place_name: string }[]>([])
+const showSuggestions = ref(false)
+let debounceTimer: ReturnType<typeof setTimeout>
+
+const fetchSuggestions = async (query: string) => {
+  if (query.length < 2) {
+    suggestions.value = []
+    showSuggestions.value = false
+    return
+  }
+  try {
+    const token = import.meta.env.VITE_MAPBOX_TOKEN
+    const encoded = encodeURIComponent(query)
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=4&types=place,locality,neighborhood,district,region`
+    )
+    const data = await res.json()
+    suggestions.value = data.features ?? []
+    showSuggestions.value = suggestions.value.length > 0
+  } catch {
+    suggestions.value = []
+  }
+}
+
+const onInput = () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => fetchSuggestions(location.value), 300)
+}
+
+const selectSuggestion = async (place: { place_name: string }) => {
+  location.value = place.place_name
+  suggestions.value = []
+  showSuggestions.value = false
+  await handleSearch()
+}
+
+const onBlur = () => {
+  setTimeout(() => { showSuggestions.value = false }, 150)
+}
+
+// search bar — geocodes the new query and flies the map
 const handleSearch = async () => {
-  console.log("poop, this needs to be done");
+  const query = location.value.trim()
+  if (!query) return
+
+  suggestions.value = []
+  showSuggestions.value = false
+
+  const coords = await geocodeLocation(query)
+  if (coords) {
+    targetLocation.value = coords
+    reportData.value.location = coords.name
+    router.replace({ name: 'Map', query: { location: query } })
+  }
 }
 
 // for the risk statistics
@@ -147,7 +234,11 @@ const toggleStats = () => {
     <div class="bg-layer">
       <div class="gradient-overlay"></div>
       <div class="map-container">
-        <mapHolder :curr-style="mapStyles[mapindex] ?? 'Normal'" :is-dark="isDark"/>
+        <mapHolder
+          :curr-style="mapStyles[mapindex] ?? 'Normal'"
+          :is-dark="isDark"
+          :target-location="targetLocation"
+        />
       </div>
       <div v-if="isDark" class="grid-overlay"></div>
      
@@ -179,11 +270,32 @@ const toggleStats = () => {
       </div>
     </div>
 
-    <!-- Search etx-->
+    <!-- Search bar -->
     <div class="search">
       <div class="search-wrapper">
         <Search class="search-icon"/>
-        <input v-model="location" type="text" placeholder="Search location..." class="search-input" @keyup.enter="handleSearch"/>
+        <div class="input-autocomplete">
+          <input
+            v-model="location"
+            type="text"
+            placeholder="Search location..."
+            class="search-input"
+            @keyup.enter="handleSearch"
+            @input="onInput"
+            @blur="onBlur"
+            autocomplete="off"
+          />
+          <div v-if="showSuggestions" class="suggestions">
+            <div
+              v-for="s in suggestions"
+              :key="s.place_name"
+              class="suggestion-item"
+              @mousedown.prevent="selectSuggestion(s)"
+            >
+              {{ s.place_name }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="divider"></div>
@@ -208,7 +320,8 @@ const toggleStats = () => {
         <span class="panel-subtitle">Risk Overview</span>
       </div>
       <div class="panel-body">
-        <p >Search a location to begin analysis.</p>
+        <p v-if="!targetLocation">Search a location to begin analysis.</p>
+        <p v-else>Analyzing: {{ reportData.location }}</p>
       </div>
       <button @click="downloadPDF" class="download-btn">Download Report</button>
       <button class="toggle-btn" :class="{ rotated: !panelopen }" @click="panelopen = !panelopen">
@@ -537,6 +650,50 @@ const toggleStats = () => {
   border-color: var(--accent);
   background: var(--input-bg);
   box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.input-autocomplete {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 var(--glass-shine);
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.suggestion-item:hover {
+  background: var(--pill-active-bg);
+  color: var(--accent);
+}
+
+.suggestion-icon {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .divider {
