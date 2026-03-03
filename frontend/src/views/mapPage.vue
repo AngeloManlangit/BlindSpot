@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import '@/assets/theme-toggle/within.css'
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
+import Information from '@/components/info.vue'
 import { Info, Layers, Map, ChartColumn, Search, MapPin } from 'lucide-vue-next'
 
 //static logo
@@ -123,10 +124,9 @@ const formatNow = (): string => {
 
 const home = () => router.push({ name: 'Landing' })
 
-type GeocodedLocation = { lng: number; lat: number; name: string; bbox?: [number, number, number, number] }
 
-// Geocode a location string to [lng, lat] (+ bbox when available) using Mapbox
-const geocodeLocation = async (query: string): Promise<GeocodedLocation | null> => {
+// Geocode a location string to [lng, lat] using Mapbox
+const geocodeLocation = async (query: string): Promise<{ lng: number; lat: number; name: string } | null> => {
   try {
     const token = import.meta.env.VITE_MAPBOX_TOKEN
     const encoded = encodeURIComponent(query)
@@ -246,10 +246,15 @@ const handleSearch = async () => {
 // for the risk statistics
 import riskStatistics from '@/components/riskStatistics.vue'
 
+
 const openStats = ref(false)
 
 const toggleStats = () => {
   openStats.value = !openStats.value
+}
+const openInfo = ref(false)
+const information = () => {
+  openInfo.value = !openInfo.value
 }
 </script>
 
@@ -286,7 +291,7 @@ const toggleStats = () => {
 
       <div class="top-actions">
         <ThemeToggleButton :is-dark="isDark" @toggle="isDark = !isDark" />
-        <button @click="home" class="icon-btn" title="Info">
+        <button @click="information" class="icon-btn" title="Info">
           <Info :size="18" color="#eacd3e" :stroke-width="2.5" />
         </button>
         <button @click="toggleStats" class="icon-btn">
@@ -407,6 +412,12 @@ const toggleStats = () => {
   <Transition name="fade">
     <div v-if="openStats" class="stats-overlay">
         <riskStatistics :report="reportData" :is-dark="isDark" @close="openStats = false" />
+    </div>
+  </Transition>
+
+  <Transition name="fade">
+    <div v-if="openInfo" class="stats-overlay">
+        <Information :is-dark="isDark" @close="openInfo = false" />
     </div>
   </Transition>
   
