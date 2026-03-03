@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { ref,computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import '@/assets/theme-toggle/within.css'
 import ThemeToggleButton from '@/components/themeToggleButton.vue'
 import mapHolder from '@/components/mapHolder.vue'
-import { Info, Layers, Map,ChartColumn, Search } from 'lucide-vue-next'
+import { Info, Layers, Map, ChartColumn, Search } from 'lucide-vue-next'
+
+// Gemini AI + Risk Cards + PDF
+import { useGemini } from '@/utils/useGemini'
+import VulnerabilityGauge from '@/components/riskCards/VulnerabilityGauge.vue'
+import EtrCard from '@/components/riskCards/EtrCard.vue'
+import AdvisoriesCard from '@/components/riskCards/AdvisoriesCard.vue'
+import ExportPdf from '@/components/pdf/ExportPdf.vue'
 
 //static logo
 import LogoDark from "@/assets/svgs/cyclone_dark.svg"
@@ -30,28 +37,10 @@ const changeMapStyle = () => {
   mapindex.value = (mapindex.value + 1) % mapStyles.length
 }
 
-import { generateRiskReport } from '../../../backend/services/pdfReport';
-import type { HazardRow, RiskReport, ThreeDayForecast, WeatherCondition, DayForecast, CellTower, BlindSpot, Recommendation } from '@/type/types'
-
-import PdfHeader from '@/components/pdf/PdfHeader.vue'
-import PdfLocation from '@/components/pdf/PdfLocation.vue'
-import PdfRiskFactors from '@/components/pdf/PdfRiskFactors.vue'
-import PdfHazards from '@/components/pdf/PdfHazards.vue'
-import PdfThreeDayForecast from '@/components/pdf/PdfThreeDayForecast.vue'
-import PdfCurrentWeather from '@/components/pdf/PdfCurrentWeather.vue'
-import PdfWeekForecast from '@/components/pdf/PdfWeekForecast.vue'
-import PdfCellTowers from '@/components/pdf/PdfCellTowers.vue'
-import PdfBlindSpots from '@/components/pdf/PdfBlindSpots.vue'
-import PdfRecommendations from '@/components/pdf/PdfRecommendations.vue'
-import PdfMethodology from '@/components/pdf/PdfMethodology.vue'
-import PdfDataSources from '@/components/pdf/PdfDataSources.vue'
-import PdfFooter from '@/components/pdf/PdfFooter.vue'
+import type { RiskReport } from '@/type/types'
 
 // State
 const router = useRouter()
-const pdfLogoDataUrl = ref('')
-const pdfLogoSvg = ref('')      
-const reportTemplate = ref<HTMLElement | null>(null)
 
 // Reactive report data,,, populate from API / map click 
 const reportData = ref<RiskReport>({
@@ -86,27 +75,39 @@ const reportData = ref<RiskReport>({
   dataSources: [],
 })
 
-import { hazardLevelColor } from '@/utils/hazardLevelColor'
+// --- Gemini AI composable ---
+const {
+  analysis,
+  loading: geminiLoading,
+  error: geminiError,
+  isOffline,
+  lastUpdated,
+  fetchWeatherAnalysis,
+  loadFromCache,
+  clearCache,
+} = useGemini()
 
-const formatNow = (): string => {
-  return new Date().toLocaleString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: true,
-  })
+const geminiActive = ref(false)
+
+/**
+ * Single on-demand Gemini fetch. Clears stale error cache first so
+ * the API is always called when the user explicitly presses the button.
+ */
+const fetchRealTimeData = async () => {
+  geminiActive.value = true
+  clearCache() // wipe old/stale data so cooldown doesn't block a fresh call
+  await fetchWeatherAnalysis(
+    reportData.value,                          // infrastructure data
+    reportData.value.currentWeather,           // weather data
+    JSON.stringify(reportData.value.hazards)   // historical data
+  )
 }
 
 const home = () => router.push({ name: 'Landing' })
-onMounted(async () => {
-  try {
-    const res = await fetch('/blindspot-logo-white.svg')
-    const svg = await res.text()
-    pdfLogoSvg.value = svg
-
-    const blob = new Blob([svg], { type: 'image/svg+xml' })
-    pdfLogoDataUrl.value = URL.createObjectURL(blob)
-  } catch (e) {
-    console.warn('Could not load PDF logo:', e)
-  }
+onMounted(() => {
+  // Load cached Gemini data for instant UI
+  const cached = loadFromCache()
+  if (cached) geminiActive.value = true
 })
 
 const openDocumentation = () => {
@@ -114,16 +115,6 @@ const openDocumentation = () => {
 }
 
 const toggleHeatmap = () => { showHeatmap.value = !showHeatmap.value }
-
-const downloadPDF = async () => {
-  if (!reportTemplate.value) return
-  reportData.value.generatedAt = formatNow()
-
-  await generateRiskReport(
-    reportTemplate.value,
-    `BlindSpot_Risk_Report_${reportData.value.location.replace(/\s+/g, '_')}`
-  )
-}
 
 // search bar
 const handleSearch = async () => {
@@ -205,47 +196,86 @@ const toggleStats = () => {
     <div :class="['right-panel', panelopen ? 'open' : 'closed']">
       <div class="panel-header">
         <span class="panel-title">Analysis</span>
-        <span class="panel-subtitle">Risk Overview</span>
+        <span class="panel-subtitle">{{ location || 'Risk Overview' }}</span>
       </div>
+
       <div class="panel-body">
-        <p >Search a location to begin analysis.</p>
+        <!-- Before Gemini is activated -->
+        <div v-if="!geminiActive && !analysis" class="panel-placeholder">
+          <p>Search a location to begin analysis.</p>
+          <button class="fetch-btn" @click="fetchRealTimeData">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+            Fetch Real-time Data
+          </button>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div v-else-if="geminiLoading && !analysis" class="skeleton-container">
+          <div class="skeleton-card">
+            <div class="skeleton-line w-40"></div>
+            <div class="skeleton-circle"></div>
+            <div class="skeleton-line w-60"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line w-30"></div>
+            <div class="skeleton-line w-full"></div>
+            <div class="skeleton-line w-80"></div>
+          </div>
+        </div>
+
+        <!-- Live analysis cards -->
+        <div v-else-if="analysis" class="cards-container">
+          <VulnerabilityGauge
+            :score="analysis.vulnerabilityScore ?? 0"
+            :system-status="analysis.systemStatus ?? 'Offline'"
+          />
+
+          <EtrCard
+            :etr="analysis.etr ?? ''"
+            :offline-brief="analysis.offlineBrief ?? ''"
+            :last-updated="lastUpdated"
+            :is-stale="isOffline"
+          />
+
+          <AdvisoriesCard
+            :advisories="analysis.advisories ?? { work: '—', commute: '—', school: '—' }"
+            :critical-action="analysis.criticalAction ?? ''"
+          />
+
+          <!-- Refresh button when active -->
+          <button class="fetch-btn secondary" @click="fetchRealTimeData" :disabled="geminiLoading">
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2"
+              :class="{ spinning: geminiLoading }"
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+            {{ geminiLoading ? 'Refreshing...' : 'Refresh Real-time Data' }}
+          </button>
+
+          <!-- PDF export via ExportPdf component -->
+          <ExportPdf :analysis="analysis" :location="location" />
+        </div>
       </div>
-      <button @click="downloadPDF" class="download-btn">Download Report</button>
+
+      <!-- Error banner -->
+      <div v-if="geminiError" class="error-banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span>{{ geminiError }} — using cached data</span>
+      </div>
+
       <button class="toggle-btn" :class="{ rotated: !panelopen }" @click="panelopen = !panelopen">
         ❯
       </button>
     </div>
     
-    <!-- PDF Template -->
-    <div style="position: absolute; left: -9999px; top: 0;">
-      <div ref="reportTemplate" style="background: white; color: #0f172a; width: 800px; padding: 50px; font-family: 'Helvetica', sans-serif;">
-        <PdfHeader :logo-svg="pdfLogoSvg" :logo-url="pdfLogoDataUrl" :data="reportData" />
-        <PdfLocation :data="reportData" />
-        <div
-          :style="`background: ${hazardLevelColor(reportData.overallLevel)}; 
-                  color: white; padding: 20px; border-radius: 8px; 
-                  text-align: center; margin-bottom: 30px;`"
-        >
-          <h3 style="margin: 0;">
-            OVERALL RISK: {{ reportData.overallRisk }}/100 — {{ reportData.overallLevel }}
-          </h3>
-          <p style="margin-top: 5px; font-size: 11px;">
-            Risk = (Hazard × Exposure × Vulnerability) / Capacity
-          </p>
-        </div>
-        <PdfRiskFactors :data="reportData" />
-        <PdfHazards :data="reportData" />
-        <PdfThreeDayForecast :data="reportData" />
-        <PdfCurrentWeather :data="reportData" />
-        <PdfWeekForecast :data="reportData" />
-        <PdfCellTowers :data="reportData" />
-        <PdfBlindSpots :data="reportData" />
-        <PdfRecommendations :data="reportData" />
-        <PdfMethodology :data="reportData" />
-        <PdfDataSources :data="reportData" />
-        <PdfFooter />
-      </div>
-    </div>
   </main>
 
   <!-- Stats overlay -->
@@ -636,24 +666,145 @@ const toggleStats = () => {
 .panel-body {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+
+.panel-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
+  color: var(--muted);
+  text-align: center;
 }
 
-.download-btn {
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 8px;
+}
+
+.fetch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  padding: 14px;
+  padding: 14px 20px;
   border-radius: 14px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(30, 144, 255, 0.3);
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.18), rgba(0, 206, 209, 0.1));
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
 }
 
-.download-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px var(--accent-glow);
+.fetch-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.3), rgba(0, 206, 209, 0.2));
+  border-color: rgba(30, 144, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(30, 144, 255, 0.15);
 }
 
-.download-btn:active {
-  transform: scale(0.98);
+.fetch-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fetch-btn.secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  padding: 10px 16px;
+}
+
+.fetch-btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Skeleton loading */
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0;
+}
+
+.skeleton-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+.skeleton-circle {
+  width: 120px;
+  height: 70px;
+  margin: 8px auto;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+.w-30 { width: 30%; }
+.w-40 { width: 40%; }
+.w-60 { width: 60%; }
+.w-80 { width: 80%; }
+.w-full { width: 100%; }
+
+/* Error banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 165, 2, 0.08);
+  border: 1px solid rgba(255, 165, 2, 0.15);
+  border-radius: 12px;
+  color: #ffa502;
+  font-size: 12px;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .toggle-btn {
